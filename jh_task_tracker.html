@@ -2894,9 +2894,10 @@ function pomoExportConfirm() {
 
 function pomoExportLog(fromDate, toDate) {
   if (pomoLog.length === 0) { showToast('No sessions to export'); return; }
+  const localDate = ts => { const d = new Date(ts); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); };
   let filtered = [...pomoLog];
-  if (fromDate) filtered = filtered.filter(e => e.ts.slice(0,10) >= fromDate);
-  if (toDate) filtered = filtered.filter(e => e.ts.slice(0,10) <= toDate);
+  if (fromDate) filtered = filtered.filter(e => localDate(e.ts) >= fromDate);
+  if (toDate) filtered = filtered.filter(e => localDate(e.ts) <= toDate);
   const sortedLog = filtered.sort((a, b) => new Date(a.ts) - new Date(b.ts));
 
   // ── Sheet 1: Session Log (no Type column)
