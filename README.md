@@ -7,7 +7,22 @@ Plan your day, manage projects, track focus sessions, generate weekly reports, a
 > **No frameworks. No build steps. No server.**
 > Just open `jh_task_tracker.html` and start working.
 
----
+## 📸 Screenshots
+
+<p align="center">
+  <img width="48%" alt="Dashboard" src="https://github.com/user-attachments/assets/5b6a5b38-38d2-4047-b379-7e60660a581c" />
+  <img width="48%" alt="Projects" src="https://github.com/user-attachments/assets/062a4c90-009c-4636-a0d0-dd359b3fd037" />
+</p>
+
+<p align="center">
+  <img width="48%" alt="Daily List" src="https://github.com/user-attachments/assets/014e98f3-fe94-48f3-925e-c4d112673bfa" />
+  <img width="48%" alt="Pomodoro" src="https://github.com/user-attachments/assets/9ae3a4cf-2a61-4e25-b0d8-4b594043a419" />
+</p>
+
+<p align="center">
+  <img width="48%" alt="Weekly Report" src="https://github.com/user-attachments/assets/88c06544-2b2b-4764-a6a9-3b3c9639ab68" />
+  <img width="48%" alt="AI Assistant" src="https://github.com/user-attachments/assets/a8051142-d8df-4772-891e-301b5fd86400" />
+</p>
 
 ## ✨ Philosophy
 
@@ -19,8 +34,6 @@ JH Task Tracker is intentionally simple.
 * ✅ No backend
 
 Everything runs locally in your browser, so your data stays on your own machine.
-
----
 
 ## 🚀 Features
 
@@ -40,7 +53,6 @@ Stay focused with a built-in Pomodoro timer and automatic session logging.
 
 Export focus history to Excel by project and date range.
 
----
 
 ### 📋 Project Management
 
@@ -62,7 +74,6 @@ Generate a visual summary of your week's work, including:
 * Weekly heatmap
 * Per-project breakdown
 
----
 
 ### 🤖 AI Features *(Optional)*
 
@@ -94,7 +105,6 @@ Bring your own Claude API key to enable:
 * Weekly standups
 * Freeform chat
 
----
 
 ## 🚀 Getting Started
 
@@ -110,7 +120,6 @@ No data leaves your machine.
 
 > **Optional:** Add your Claude API key in **Settings** to enable AI features.
 
----
 
 ## 🛠 Tech Stack
 
@@ -122,7 +131,6 @@ No data leaves your machine.
 * `xlsx-js-style`
 * Tabler Icons
 
----
 
 ## 📄 License
 
