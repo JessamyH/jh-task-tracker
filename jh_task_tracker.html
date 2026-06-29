@@ -1853,6 +1853,9 @@ function openTaskModal(id) {
 let _pdpTaskId = null;
 let _pdpTab = 'overview';
 
+const _tBtn = (id, pos='right:8px;top:50%;transform:translateY(-50%)') =>
+  `<button type="button" data-lang="en" oncontextmenu="event.preventDefault();toggleTranslateLang(this)" onclick="inlineTranslate('${id}',this)" title="Translate to English" style="position:absolute;${pos};font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;white-space:nowrap;transition:all .15s;font-family:'Lato',sans-serif;z-index:1" onmouseover="this.style.borderColor='var(--sage)';this.style.color='var(--sage2)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">🌐 EN</button>`;
+
 function openProjDetail(id) {
   _pdpTaskId = id;
   _pdpTab = 'overview';
@@ -1916,7 +1919,10 @@ function pdpRenderOverview(body, footer) {
   body.innerHTML = `
     <div class="pdp-field">
       <span class="pdp-label">Task name</span>
-      <input class="form-input" id="pdp-f-name" value="${escHtml(task.name)}" style="font-size:14px">
+      <div style="position:relative">
+        <input class="form-input" id="pdp-f-name" value="${escHtml(task.name)}" style="font-size:14px;padding-right:70px">
+        ${_tBtn('pdp-f-name')}
+      </div>
     </div>
     <div class="pdp-field-row">
       <div class="pdp-field">
@@ -1949,7 +1955,10 @@ function pdpRenderOverview(body, footer) {
     </div>
     <div class="pdp-field">
       <span class="pdp-label">Notes</span>
-      <textarea class="form-textarea" id="pdp-f-notes" style="min-height:80px">${escHtml(task.notes || '')}</textarea>
+      <div style="position:relative">
+        <textarea class="form-textarea" id="pdp-f-notes" style="min-height:80px;padding-right:70px;padding-bottom:32px">${escHtml(task.notes || '')}</textarea>
+        ${_tBtn('pdp-f-notes', 'right:8px;bottom:8px')}
+      </div>
     </div>
     <div style="margin-top:4px">
       <div class="pdp-section-title" style="margin-top:0">Today's Tasks <span class="pdp-count" id="pdp-today-count"></span></div>
@@ -1960,8 +1969,11 @@ function pdpRenderOverview(body, footer) {
   footer.style.flexDirection = 'column';
   footer.innerHTML = `
     <div style="display:flex;gap:7px;width:100%;padding-bottom:12px">
-      <input class="pdp-add-input" id="pdp-today-input" placeholder="Add to today…" onkeydown="if(event.key==='Enter')pdpTodayAdd(${task.id})">
-      <button class="pdp-add-btn" onclick="pdpTodayAdd(${task.id})">+</button>
+      <div style="position:relative;flex:1">
+        <input class="daily-add-input" id="pdp-today-input" placeholder="Add to today…" onkeydown="if(event.key==='Enter')pdpTodayAdd(${task.id})" style="padding-right:56px;width:100%;box-sizing:border-box">
+        ${_tBtn('pdp-today-input')}
+      </div>
+      <button class="pdp-add-btn" onclick="pdpTodayAdd(${task.id})" style="align-self:stretch;padding:0 12px;font-size:16px">+</button>
     </div>
     <div style="height:1px;background:var(--border);margin:0 -22px 12px"></div>
     <div style="display:flex;gap:8px;justify-content:space-between;width:100%">
@@ -2116,8 +2128,11 @@ function pdpRenderBacklog(body, footer) {
 
   footer.innerHTML = `
     <div style="display:flex;gap:7px;width:100%">
-      <input class="pdp-add-input" id="pdp-bl-input" placeholder="Add backlog item…" onkeydown="if(event.key==='Enter')pdpBacklogAdd()">
-      <button class="pdp-add-btn" onclick="pdpBacklogAdd()">+</button>
+      <div style="position:relative;flex:1">
+        <input class="backlog-add-input" id="pdp-bl-input" placeholder="Add backlog item…" onkeydown="if(event.key==='Enter')pdpBacklogAdd()" style="padding-right:56px;width:100%;box-sizing:border-box">
+        ${_tBtn('pdp-bl-input')}
+      </div>
+      <button class="backlog-add-btn" onclick="pdpBacklogAdd()" style="align-self:stretch;padding:6px 12px;font-size:16px">+</button>
     </div>
   `;
   const inp = document.getElementById('pdp-bl-input');
@@ -2216,7 +2231,10 @@ function pdpRenderBlockers(body, footer) {
     <div class="blocker-add-row" style="margin-top:0;width:100%">
       <div style="display:flex;gap:6px;flex:1;min-width:0">
         <input id="pdp-bk-owner" value="${escHtml(ownerVal)}" placeholder="Who?" style="width:72px;flex-shrink:0;font-size:12px;font-family:'Lato',sans-serif;background:var(--surface);border:1px solid rgba(196,90,48,.2);border-radius:8px;padding:8px;color:var(--text);outline:none;box-sizing:border-box" class="blocker-owner-inp" onfocus="this.style.borderColor='var(--blocker)'" onblur="this.style.borderColor='rgba(196,90,48,.2)';_pdpBlockerOwner=this.value.trim()||null">
-        <input class="blocker-add-input" id="pdp-bk-input" placeholder="Describe the blocker…" onkeydown="if(event.key==='Enter')pdpBlockerAdd()" style="flex:1;min-width:0">
+        <div style="position:relative;flex:1;min-width:0">
+          <input class="blocker-add-input" id="pdp-bk-input" placeholder="Describe the blocker…" onkeydown="if(event.key==='Enter')pdpBlockerAdd()" style="width:100%;box-sizing:border-box;padding-right:56px;background:rgba(196,90,48,.05)">
+          <button type="button" data-lang="en" oncontextmenu="event.preventDefault();toggleTranslateLang(this)" onclick="inlineTranslate('pdp-bk-input',this)" title="Translate to English" style="position:absolute;right:7px;top:50%;transform:translateY(-50%);font-size:11px;padding:2px 6px;border-radius:6px;border:1px solid rgba(196,90,48,.25);background:rgba(196,90,48,.07);color:var(--blocker-dark);cursor:pointer;font-family:'Lato',sans-serif;transition:all .15s" onmouseover="this.style.background='rgba(196,90,48,.15)'" onmouseout="this.style.background='rgba(196,90,48,.07)'">🌐 EN</button>
+        </div>
       </div>
       <button class="blocker-add-btn" onclick="pdpBlockerAdd()" style="align-self:stretch;padding:0 12px;font-size:16px">+</button>
     </div>
