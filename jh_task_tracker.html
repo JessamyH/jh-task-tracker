@@ -1122,6 +1122,10 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
             <option value="">No project</option>
           </select>
         </div>
+        <div class="form-group">
+          <label class="form-label">Link <span style="color:var(--muted2);font-weight:400">(optional)</span></label>
+          <input class="form-input" id="routine-link" placeholder="https://…" style="width:100%;box-sizing:border-box">
+        </div>
         <div class="modal-actions" style="justify-content:flex-end">
           <button class="btn" id="routine-delete-btn" onclick="routineDelete()" style="color:var(--rose);border-color:rgba(192,57,43,.4);display:none" onmouseover="this.style.background='var(--rose)';this.style.color='#fff';this.style.borderColor='var(--rose)'" onmouseout="this.style.background='';this.style.color='var(--rose)';this.style.borderColor='rgba(192,57,43,.4)'">Delete</button>
           <div style="display:flex;gap:8px">
@@ -4934,6 +4938,7 @@ function routineGenerate() {
       date: today,
       taskId: r.taskId || null,
       taskName: r.taskName || null,
+      link: r.link || null,
       done: false,
       ts: new Date().toISOString(),
       routineId: r.id
@@ -4959,7 +4964,10 @@ function routinesRenderList() {
         const dayStr = ROUTINE_DAY_JS.map((jsDay, i) => (r.days || []).includes(jsDay) ? ROUTINE_DAY_LABELS[i] : null).filter(Boolean).join(' ');
         return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);cursor:pointer" onclick="routineOpenEdit(${idx})">
           <div style="min-width:0">
-            <div style="font-size:13px;color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.text}</div>
+            <div style="font-size:13px;color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:5px">
+              <span style="overflow:hidden;text-overflow:ellipsis">${r.text}</span>
+              ${r.link ? `<a href="${r.link}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="${r.link}" style="flex-shrink:0;opacity:.7;text-decoration:none">🔗</a>` : ''}
+            </div>
             <div style="font-size:11px;color:var(--muted2);font-family:'DM Mono',monospace;margin-top:2px">${dayStr || 'No days set'}${r.taskName ? ' · ' + r.taskName : ''}</div>
           </div>
           <span style="font-size:13px;color:var(--muted2);flex-shrink:0">›</span>
@@ -4998,6 +5006,7 @@ function routineOpenEdit(idx) {
   const taskOptions = tasks.filter(t => t.status !== 'done').map(t => `<option value="${t.id}">${t.name.length > 35 ? t.name.slice(0,35)+'…' : t.name}</option>`).join('');
   sel.innerHTML = `<option value="">No project</option>${taskOptions}`;
   sel.value = r && r.taskId ? r.taskId : '';
+  document.getElementById('routine-link').value = r && r.link ? r.link : '';
   document.getElementById('routine-edit-modal').classList.add('open');
   setTimeout(() => document.getElementById('routine-text').focus(), 50);
 }
@@ -5011,6 +5020,7 @@ function routineSave() {
   const sel = document.getElementById('routine-task-select');
   const taskId = sel.value ? parseInt(sel.value) : null;
   const task = taskId ? tasks.find(t => t.id === taskId) : null;
+  const link = document.getElementById('routine-link').value.trim() || null;
   const idxVal = document.getElementById('routine-edit-id').value;
   if (idxVal !== '') {
     const r = routines[parseInt(idxVal)];
@@ -5018,8 +5028,9 @@ function routineSave() {
     r.days = _routineEditDays.slice();
     r.taskId = task ? task.id : null;
     r.taskName = task ? task.name : null;
+    r.link = link;
   } else {
-    routines.push({ id: Date.now(), text, days: _routineEditDays.slice(), taskId: task ? task.id : null, taskName: task ? task.name : null, lastGenDate: null });
+    routines.push({ id: Date.now(), text, days: _routineEditDays.slice(), taskId: task ? task.id : null, taskName: task ? task.name : null, link, lastGenDate: null });
   }
   routinesSaveStore();
   routinesRenderList();
