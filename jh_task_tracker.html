@@ -146,8 +146,7 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
 .kcard-due{font-size:10px;font-family:'DM Mono',monospace;color:var(--muted2)}
 .kcard-due.overdue{color:var(--rose);font-weight:700}
 .kcard-due.due-soon{color:var(--amber);font-weight:700}
-.kanban-card.overdue{border-left:3px solid var(--rose)}
-.kanban-card.due-soon{border-left:3px solid var(--amber)}
+
 .kcard-footer{display:flex;align-items:center;gap:8px}
 .kcard-track{flex:1;height:3px;background:var(--surface3);border-radius:999px;overflow:hidden}
 .kcard-fill{height:100%;border-radius:999px}
@@ -1270,8 +1269,8 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
     <input type="hidden" id="edit-id">
     <div class="form-group"><label class="form-label">Task name</label><div style="position:relative"><input class="form-input" id="f-name" placeholder="e.g. Complete Claude API course" style="padding-right:70px"><button type="button" title="Translate to English" data-lang="en" oncontextmenu="event.preventDefault();toggleTranslateLang(this)" onclick="inlineTranslate('f-name', this)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;white-space:nowrap;transition:all .15s;font-family:'Lato',sans-serif" onmouseover="this.style.borderColor='var(--sage)';this.style.color='var(--sage2)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">🌐 EN</button></div></div>
     <div class="form-row">
-      <div class="form-group"><label class="form-label">Due date</label><input class="form-input" type="date" id="f-due"></div>
       <div class="form-group"><label class="form-label">Date assigned</label><input class="form-input" type="date" id="f-date"></div>
+      <div class="form-group"><label class="form-label" style="color:var(--amber)">Due date</label><input class="form-input" type="date" id="f-due" style="border-color:var(--amber);background:rgba(184,134,11,.06)"></div>
     </div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">Priority</label>
