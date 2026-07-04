@@ -2004,12 +2004,12 @@ function pdpRenderOverview(body, footer) {
     </div>
     <div class="pdp-field-row">
       <div class="pdp-field">
-        <span class="pdp-label">Due date</span>
-        <input class="form-input" type="date" id="pdp-f-due" value="${task.due || ''}" onchange="pdpAutosaveOverview()">
-      </div>
-      <div class="pdp-field">
         <span class="pdp-label">Date assigned</span>
         <input class="form-input" type="date" id="pdp-f-date" value="${task.date || ''}" onchange="pdpAutosaveOverview()">
+      </div>
+      <div class="pdp-field">
+        <span class="pdp-label" style="color:var(--amber)">Due date</span>
+        <input class="form-input" type="date" id="pdp-f-due" value="${task.due || ''}" onchange="pdpAutosaveOverview()" style="border-color:var(--amber);background:rgba(184,134,11,.06)">
       </div>
     </div>
     <div class="pdp-field-row">
@@ -5629,7 +5629,7 @@ function dailyRender() {
     let html = '';
     if (rollovers.length > 0) {
       html += `<div class="daily-group-header" ondragover="event.preventDefault();if(typeof _blockerDragId!=='undefined'&&_blockerDragId)event.dataTransfer.dropEffect='none'" ondrop="if(typeof _blockerDragId==='undefined'||!_blockerDragId)dailyDropToToday(event);else event.preventDefault()"><span class="daily-group-label" style="color:var(--rose)">OVERDUE · ${rollovers.length}</span><div class="daily-group-line"></div></div>`;
-      html += `<div style="font-size:11px;color:var(--muted2);margin-bottom:6px;padding-left:2px">Drag items to TODAY ↓ to reschedule</div>`;
+      html += `<div style="font-size:11px;color:var(--rose);margin-bottom:6px;padding-left:2px">Drag items to TODAY ↓ to reschedule</div>`;
       html += `<div style="display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto;padding-right:4px" class="scroll-hide">${rollovers.map(i => renderItem(i, true)).join('')}</div>`;
     }
     const doneItems = dailyItems.filter(i => i.date === today && i.done);
