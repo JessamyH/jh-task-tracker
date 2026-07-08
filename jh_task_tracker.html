@@ -1270,7 +1270,7 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
     <div class="form-group"><label class="form-label">Task name</label><div style="position:relative"><input class="form-input" id="f-name" placeholder="e.g. Complete Claude API course" style="padding-right:70px"><button type="button" title="Translate to English" data-lang="en" oncontextmenu="event.preventDefault();toggleTranslateLang(this)" onclick="inlineTranslate('f-name', this)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;white-space:nowrap;transition:all .15s;font-family:'Lato',sans-serif" onmouseover="this.style.borderColor='var(--sage)';this.style.color='var(--sage2)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">🌐 EN</button></div></div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">Date assigned</label><input class="form-input" type="date" id="f-date"></div>
-      <div class="form-group"><label class="form-label" style="color:var(--amber)">Due date</label><input class="form-input" type="date" id="f-due" style="border-color:var(--amber);background:rgba(184,134,11,.06)"></div>
+      <div class="form-group"><label class="form-label" style="color:var(--amber)">Due date</label><input class="form-input" type="date" id="f-due" style="border-left:3px solid var(--amber)"></div>
     </div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">Priority</label>
@@ -1859,8 +1859,8 @@ function goToPomodoro(taskId, taskName, itemText) {
   setView('pomodoro', navBtn);
   // Set the task selector
   const sel = document.getElementById('pomo-task-sel');
-  if (sel && taskId) {
-    sel.value = String(taskId);
+  if (sel) {
+    sel.value = taskId ? String(taskId) : '';
     pomoRenderNoteChips();
   }
   // Pre-fill note with item text
@@ -2008,7 +2008,7 @@ function pdpRenderOverview(body, footer) {
       </div>
       <div class="pdp-field">
         <span class="pdp-label" style="color:var(--amber)">Due date</span>
-        <input class="form-input" type="date" id="pdp-f-due" value="${task.due || ''}" onchange="pdpAutosaveOverview()" style="border-color:var(--amber);background:rgba(184,134,11,.06)">
+        <input class="form-input" type="date" id="pdp-f-due" value="${task.due || ''}" onchange="pdpAutosaveOverview()" style="border-left:3px solid var(--amber)">
       </div>
     </div>
     <div class="pdp-field-row">
@@ -3316,10 +3316,10 @@ function pomoRenderNoteChips() {
   const btn = document.getElementById('pomo-chips-btn');
   if (!chipsEl || !btn) return;
   const taskId = sel ? parseInt(sel.value) || null : null;
-  if (!taskId) { chipsEl.style.display = 'none'; chipsEl.innerHTML = ''; btn.style.display = 'none'; return; }
   const today = dailyLocalDate();
-  const yesterday = dailyLocalDate(-1);
-  const linked = dailyItems.filter(i => i.taskId === taskId && !i.done && i.date <= today);
+  const linked = taskId
+    ? dailyItems.filter(i => i.taskId === taskId && !i.done && i.date <= today)
+    : dailyItems.filter(i => !i.taskId && !i.done && i.date <= today);
   if (linked.length === 0) { chipsEl.style.display = 'none'; chipsEl.innerHTML = ''; btn.style.display = 'none'; return; }
   btn.style.display = 'inline-block';
   btn.title = 'Suggestions (' + linked.length + ')';
@@ -3807,10 +3807,10 @@ function meRenderNoteChips() {
   const btn = document.getElementById('me-chips-btn');
   if (!chipsEl || !btn) return;
   const taskId = sel ? parseInt(sel.value) || null : null;
-  if (!taskId) { chipsEl.style.display = 'none'; chipsEl.innerHTML = ''; btn.style.display = 'none'; return; }
   const today = dailyLocalDate();
-  const yesterday = dailyLocalDate(-1);
-  const linked = dailyItems.filter(i => i.taskId === taskId && !i.done && i.date <= today);
+  const linked = taskId
+    ? dailyItems.filter(i => i.taskId === taskId && !i.done && i.date <= today)
+    : dailyItems.filter(i => !i.taskId && !i.done && i.date <= today);
   if (linked.length === 0) { chipsEl.style.display = 'none'; chipsEl.innerHTML = ''; btn.style.display = 'none'; return; }
   btn.style.display = 'inline-block';
   btn.title = 'Suggestions (' + linked.length + ')';
