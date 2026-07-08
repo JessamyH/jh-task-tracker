@@ -580,8 +580,8 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
   <nav class="sidebar-nav">
     <div class="nav-section">Views</div>
     <button class="nav-item active" onclick="setView('dashboard',this)"><span class="nav-icon">⊞</span> Dashboard</button>
-    <button class="nav-item" onclick="setView('kanban',this)"><span class="nav-icon">≡</span> Projects</button>
     <button class="nav-item" onclick="setView('daily',this)" id="nav-daily"><span class="nav-icon">☀</span> Daily List</button>
+    <button class="nav-item" onclick="setView('kanban',this)"><span class="nav-icon">≡</span> Projects</button>
     <button class="nav-item" onclick="setView('ideas',this)" id="nav-ideas"><span class="nav-icon">💡</span> Ideas</button>
     <div class="nav-section">Focus</div>
     <button class="nav-item" onclick="setView('pomodoro',this)" id="nav-pomodoro"><span class="nav-icon">⏱</span> Pomodoro</button>
@@ -654,7 +654,7 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
       </div>
       <div class="section-header">
         <div class="section-title">Recent projects <span class="section-count" id="rc-count">0</span></div>
-        <button class="btn" onclick="setView('kanban',document.querySelectorAll('.nav-item')[1])">View all →</button>
+        <button class="btn" onclick="setView('kanban',document.querySelectorAll('.nav-item')[2])">View all →</button>
       </div>
       <div class="task-list" id="dashboard-list"></div>
     </div>
