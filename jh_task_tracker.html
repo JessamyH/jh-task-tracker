@@ -1849,7 +1849,7 @@ function setView(v, btn) {
   if (v === 'kanban') { kanbanFilter = 'all'; setProjView(projView); const ct=document.getElementById('proj-total-count'); if(ct) ct.textContent=tasks.length+' project'+(tasks.length!==1?'s':''); }
   if (v === 'pomodoro') { pomoPopulateTaskSelect(); pomoRenderNoteChips(); pomoRenderLog(); pomoRenderStats(); pomoInitCountUpBtns(); requestAnimationFrame(syncPomoHeight); }
   if (v === 'weekly') { wrRender(); }
-  if (v === 'daily') { dailyRender(); }
+  if (v === 'daily') { backlogAutoSchedule(); routineGenerate(); dailyRender(); }
 }
 
 // ── Launch Pomodoro from Daily item
