@@ -1041,7 +1041,7 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
             <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;gap:16px;align-items:flex-start">
               <div style="min-width:72px;flex-shrink:0">
                 <div style="font-size:16px;font-weight:800;color:var(--muted);letter-spacing:-.02em">v1.3.0</div>
-                <div style="font-size:11px;color:var(--muted2);margin-top:3px;white-space:nowrap">Jul 10, 2026</div>
+                <div style="font-size:11px;color:var(--muted2);margin-top:3px;white-space:nowrap">Jul 11, 2026</div>
               </div>
               <div style="width:1px;background:var(--border);align-self:stretch;flex-shrink:0"></div>
               <ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;padding-top:1px">
@@ -3919,6 +3919,7 @@ function exportData() {
     blockers: blockers,
     ideas: ideas,
     fbItems: fbItems,
+    routines: routines,
     exportedAt: new Date().toISOString()
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
@@ -3953,10 +3954,12 @@ function importData(input) {
       if (data.blockers) { blockers = data.blockers; localStorage.setItem(BLOCKER_KEY, JSON.stringify(blockers)); }
       if (data.ideas) { ideas = data.ideas; localStorage.setItem(IDEAS_KEY, JSON.stringify(ideas)); }
       if (data.fbItems) { fbItems = data.fbItems; localStorage.setItem(FB_KEY, JSON.stringify(fbItems)); }
+      if (data.routines) { routines = data.routines; routinesSaveStore(); }
       render();
       dailyRender();
       if (typeof ideasRender === 'function') ideasRender();
       if (typeof fbRender === 'function') fbRender();
+      if (typeof routinesRenderList === 'function') routinesRenderList();
       showToast('✅ Data imported successfully!');
     } catch(err) {
       showToast('Import failed — invalid file');
