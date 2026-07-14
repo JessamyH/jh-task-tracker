@@ -3192,7 +3192,7 @@ function pomoStartNoise(type) {
   pomoStopNoise();
   if (!pomoGainNode) { pomoGainNode = ctx.createGain(); pomoGainNode.connect(ctx.destination); }
   const typeGain = {white: 1.0, pink: 3.5, brown: 4.5};
-  pomoGainNode.gain.value = pomoVolVal / 30 * 0.008 * (typeGain[type] || 1);
+  pomoGainNode.gain.value = pomoVolVal / 30 * 0.019 * (typeGain[type] || 1);
   pomoNoiseNode = pomoBuildNoise(type);
   pomoNoiseNode.connect(pomoGainNode);
   pomoNoiseNode.start();
@@ -3211,7 +3211,7 @@ function pomoPlayCelebration() {
       osc.frequency.value = freq;
       const t = ctx.currentTime + i * 0.12;
       gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(0.18, t + 0.04);
+      gain.gain.linearRampToValueAtTime(0.25, t + 0.04);
       gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
       osc.start(t); osc.stop(t + 0.35);
     });
@@ -3235,7 +3235,7 @@ function pomoSetVol(v) {
   const lbl = document.getElementById('pomo-vol-lbl');
   if (lbl) lbl.textContent = v;
   const typeGain = {white: 1.0, pink: 3.5, brown: 4.5};
-  if (pomoGainNode) pomoGainNode.gain.value = pomoVolVal / 30 * 0.008 * (typeGain[pomoCurNoise] || 1);
+  if (pomoGainNode) pomoGainNode.gain.value = pomoVolVal / 30 * 0.019 * (typeGain[pomoCurNoise] || 1);
 }
 
 function pomoRenderStats() {
