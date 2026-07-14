@@ -814,7 +814,7 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
             </div>
             <script>
               (function(){
-                const fn = (localStorage.getItem('taas_username') || 'there').split(' ')[0];
+                const fn = (localStorage.getItem('jhtt_username') || 'there').split(' ')[0];
                 const el = document.getElementById('ai-greeting-bubble');
                 if (el) el.innerHTML = el.innerHTML.replace('Hi there', 'Hi ' + fn);
               })();
@@ -1807,7 +1807,7 @@ function saveUserName() {
     // Update avatar initials
     const initials = val.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
     document.getElementById('user-avatar').textContent = initials;
-    localStorage.setItem('taas_username', val);
+    localStorage.setItem('jhtt_username', val);
     const fn = val.split(' ')[0];
     const gb = document.getElementById('ai-greeting-bubble');
     if (gb) gb.innerHTML = gb.innerHTML.replace(/Hi \S+/, 'Hi ' + fn);
@@ -1822,7 +1822,7 @@ function cancelEditUserName() {
   display.style.display = 'block';
 }
 function openAboutMeModal() {
-  const saved = localStorage.getItem('taas_aboutme') || '';
+  const saved = localStorage.getItem('jhtt_aboutme') || '';
   document.getElementById('aboutme-textarea').value = saved;
   document.getElementById('aboutme-modal').classList.add('open');
   setTimeout(() => document.getElementById('aboutme-textarea').focus(), 50);
@@ -1832,12 +1832,12 @@ function closeAboutMeModal() {
 }
 function saveAboutMe() {
   const val = document.getElementById('aboutme-textarea').value.trim();
-  localStorage.setItem('taas_aboutme', val);
+  localStorage.setItem('jhtt_aboutme', val);
   closeAboutMeModal();
 }
-// Load saved username on startup
-(function() {
-  const saved = localStorage.getItem('taas_username');
+// Load saved username/aboutme (on startup, and re-run after import)
+function loadUserNameAndAbout() {
+  const saved = localStorage.getItem('jhtt_username');
   if (saved) {
     const display = document.getElementById('user-name-display');
     if (display) {
@@ -1846,12 +1846,13 @@ function saveAboutMe() {
       document.getElementById('user-avatar').textContent = initials;
     }
   }
-  const savedAbout = localStorage.getItem('taas_aboutme');
+  const savedAbout = localStorage.getItem('jhtt_aboutme');
   if (savedAbout) {
     const d = document.getElementById('user-aboutme-display');
     if (d) d.textContent = savedAbout;
   }
-})();
+}
+loadUserNameAndAbout();
 
 function setView(v, btn) {
   ['dashboard','kanban','daily','pomodoro','weekly','ai','ideas','feedback','meeting'].forEach(id => {
@@ -3583,7 +3584,7 @@ const sheet2Data = [['Project', 'Total (min)', 'Hours', 'Distribution']];
 
   XLSX.utils.book_append_sheet(wb, ws1, 'Session Log');
   XLSX.utils.book_append_sheet(wb, ws2, 'By Project');
-  const firstName = (localStorage.getItem('taas_username') || 'focus').split(' ')[0];
+  const firstName = (localStorage.getItem('jhtt_username') || 'focus').split(' ')[0];
   const fmtFilDate = d => { const dt = new Date(d); return String(dt.getDate()).padStart(2,'0') + ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][dt.getMonth()] + dt.getFullYear(); };
   const fileFrom = fmtFilDate(fromDate || (sortedLog.length > 0 ? sortedLog[0].ts : new Date()));
   const fileTo = fmtFilDate(toDate || new Date());
@@ -3920,6 +3921,8 @@ function exportData() {
     ideas: ideas,
     fbItems: fbItems,
     routines: routines,
+    username: localStorage.getItem('jhtt_username') || '',
+    aboutme: localStorage.getItem('jhtt_aboutme') || '',
     exportedAt: new Date().toISOString()
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
@@ -3955,11 +3958,14 @@ function importData(input) {
       if (data.ideas) { ideas = data.ideas; localStorage.setItem(IDEAS_KEY, JSON.stringify(ideas)); }
       if (data.fbItems) { fbItems = data.fbItems; localStorage.setItem(FB_KEY, JSON.stringify(fbItems)); }
       if (data.routines) { routines = data.routines; routinesSaveStore(); }
+      if (data.username) { localStorage.setItem('jhtt_username', data.username); }
+      if (data.aboutme) { localStorage.setItem('jhtt_aboutme', data.aboutme); }
       render();
       dailyRender();
       if (typeof ideasRender === 'function') ideasRender();
       if (typeof fbRender === 'function') fbRender();
       if (typeof routinesRenderList === 'function') routinesRenderList();
+      if (typeof loadUserNameAndAbout === 'function') loadUserNameAndAbout();
       showToast('✅ Data imported successfully!');
     } catch(err) {
       showToast('Import failed — invalid file');
@@ -4029,7 +4035,7 @@ function aiSetInput(text) {
 function aiClearChat() {
   aiHistory = [];
   const box = document.getElementById('ai-chat-messages');
-  if (box) box.innerHTML = `<div class="ai-msg ai-msg-assistant"><div class="ai-label">AI</div><div class="ai-bubble ai-bubble-assistant">Hi ${(localStorage.getItem('taas_username') || 'there').split(' ')[0]} <span class="ai-brand-icon">🌿</span> I'm here to make your workday a little lighter and more organized.<br><br>Here's what I can help with:<br>· <b>Weekly Standup</b> — choose a date range and I'll summarize your tasks and Pomodoro logs<br>· <b>Draft Email</b> — I'll prepare a clean draft for you to refine<br>· <b>Translate to English</b> — type in Chinese and I'll turn it into natural English<br><br>Take your time, one step at a time ✨</div></div>`;
+  if (box) box.innerHTML = `<div class="ai-msg ai-msg-assistant"><div class="ai-label">AI</div><div class="ai-bubble ai-bubble-assistant">Hi ${(localStorage.getItem('jhtt_username') || 'there').split(' ')[0]} <span class="ai-brand-icon">🌿</span> I'm here to make your workday a little lighter and more organized.<br><br>Here's what I can help with:<br>· <b>Weekly Standup</b> — choose a date range and I'll summarize your tasks and Pomodoro logs<br>· <b>Draft Email</b> — I'll prepare a clean draft for you to refine<br>· <b>Translate to English</b> — type in Chinese and I'll turn it into natural English<br><br>Take your time, one step at a time ✨</div></div>`;
 }
 
 function aiRenderMarkdown(text) {
@@ -4164,8 +4170,8 @@ async function aiCall(userText) {
         model: 'claude-sonnet-4-5',
         max_tokens: 1000,
         system: (function(){
-          const _fn = (localStorage.getItem('taas_username') || 'Your Name').split(' ')[0];
-          const _about = localStorage.getItem('taas_aboutme') || ''; return 'You are a helpful bilingual assistant embedded in JH Task Tracker, a personal productivity app used by ' + _fn + (_about ? ', ' + _about : '') + '.\n\nYour responsibilities:\n- Translate Chinese text to natural, professional English\n- Summarise weekly task and Pomodoro data into clean reports or standups\n- Help draft professional emails and messages\n- Answer work-related questions concisely\n\nRules:\n- Always reply in English, unless the user explicitly asks for Chinese output\n- For translation requests, output only the clean translated text — no preamble\n- For email drafts, always sign off with \"Best regards,\\n' + _fn + '\"\n- Be concise and practical';
+          const _fn = (localStorage.getItem('jhtt_username') || 'Your Name').split(' ')[0];
+          const _about = localStorage.getItem('jhtt_aboutme') || ''; return 'You are a helpful bilingual assistant embedded in JH Task Tracker, a personal productivity app used by ' + _fn + (_about ? ', ' + _about : '') + '.\n\nYour responsibilities:\n- Translate Chinese text to natural, professional English\n- Summarise weekly task and Pomodoro data into clean reports or standups\n- Help draft professional emails and messages\n- Answer work-related questions concisely\n\nRules:\n- Always reply in English, unless the user explicitly asks for Chinese output\n- For translation requests, output only the clean translated text — no preamble\n- For email drafts, always sign off with \"Best regards,\\n' + _fn + '\"\n- Be concise and practical';
         })(),
         messages: aiHistory
       })
@@ -6179,7 +6185,7 @@ initDropZones();
     var ctx = document.getElementById('mtg-context').value.trim();
     var sceneMap = {planning:'Planning',technical:'Technical',status:'Status Update',client:'Client Meeting',review:'Retrospective'};
     var qList = mtgQuestions.map(function(q,i){ return (i+1)+'. '+q.en; }).join('\n');
-    var _about = localStorage.getItem('taas_aboutme') || ''; var base = 'You are a real-time assistant for English-language meetings. The user is a non-native English speaker listening and taking notes in English meetings.' + (_about ? ' User background: ' + _about + '.' : '') + '\nMeeting type: '+(sceneMap[mtgScene]||mtgScene)+'\n'+(ctx?'Meeting context: '+ctx+'\n':'')+(qList?'Questions to confirm today:\n'+qList:'');
+    var _about = localStorage.getItem('jhtt_aboutme') || ''; var base = 'You are a real-time assistant for English-language meetings. The user is a non-native English speaker listening and taking notes in English meetings.' + (_about ? ' User background: ' + _about + '.' : '') + '\nMeeting type: '+(sceneMap[mtgScene]||mtgScene)+'\n'+(ctx?'Meeting context: '+ctx+'\n':'')+(qList?'Questions to confirm today:\n'+qList:'');
     if (mode === 'analyze') {
       return base+'\n\nTask:\n1. Summarize what was just discussed in 2-3 concise sentences in English, then provide a Chinese translation\n2. If any question from the checklist was answered, include its number (1-based) in answered_q\n3. Suggest 3-4 follow-up questions in English with Chinese translation\n\nRespond ONLY with valid JSON in this exact format, no extra text:\n{\n  "summary_en": "...",\n  "summary_zh": "...",\n  "answered_q": [],\n  "questions": [\n    {"type": "ask", "en": "...", "zh": "..."},\n    {"type": "clarify", "en": "...", "zh": "..."}\n  ]\n}\ntype must be one of: ask, clarify, confirm, idea';
     } else {
