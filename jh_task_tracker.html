@@ -236,6 +236,13 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
 .daily-link-clear-btn{background:rgba(138,90,90,.1);color:var(--rose);border:1px solid rgba(138,90,90,.2);border-radius:7px;padding:5px 10px;font-size:12px;cursor:pointer;font-family:'Lato',sans-serif}
 .daily-link-cancel-btn{background:var(--surface2);color:var(--muted);border:1px solid var(--border);border-radius:7px;padding:5px 10px;font-size:12px;cursor:pointer;font-family:'Lato',sans-serif}
 .daily-item-pomo-btn:hover{opacity:1;transform:scale(1.2)}
+.daily-item-est{font-size:11px;padding:2px 8px;border-radius:999px;white-space:nowrap;border:1px dashed var(--border2);background:none;color:var(--muted2);cursor:pointer;font-family:'Lato',sans-serif;transition:all .15s;flex-shrink:0}
+.daily-item-est.set{border-style:solid;border-color:var(--border2);color:var(--muted);background:var(--surface2)}
+.daily-item-est:hover{border-color:var(--sage);color:var(--sage2)}
+.daily-est-popup{position:fixed;z-index:9999;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:10px;box-shadow:0 4px 20px rgba(30,64,48,.14);min-width:200px}
+.daily-est-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.daily-est-chip{border:1px solid var(--border2);background:var(--surface2);color:var(--text);border-radius:7px;padding:4px 9px;font-size:12px;cursor:pointer;font-family:'Lato',sans-serif}
+.daily-est-chip:hover{border-color:var(--sage);color:var(--sage2)}
 .daily-add-row{display:flex;gap:8px;align-items:center;margin-top:4px}
 .daily-add-input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 12px;font-size:13px;color:var(--text);font-family:'Lato',sans-serif;outline:none;transition:border-color .15s}
 .daily-add-input:focus{border-color:var(--sage)}
@@ -1881,7 +1888,7 @@ function setView(v, btn) {
 }
 
 // ── Launch Pomodoro from Daily item
-function goToPomodoro(taskId, taskName, itemText) {
+function goToPomodoro(taskId, taskName, itemText, estMins) {
   // Switch to pomodoro view
   const navBtn = document.getElementById('nav-pomodoro');
   setView('pomodoro', navBtn);
@@ -1898,7 +1905,16 @@ function goToPomodoro(taskId, taskName, itemText) {
     noteEl.style.borderColor = 'var(--sage)';
     setTimeout(() => { noteEl.style.borderColor = ''; }, 1200);
   }
-  showToast('🍅 Pomodoro ready — press ▶ to start');
+  // Apply the task's estimated duration to this session only (doesn't change saved focus default)
+  if (estMins && pomoMode === 'focus' && !pomoRunning) {
+    pomoRemaining = estMins * 60;
+    pomoTotal = pomoRemaining;
+    pomoUpdateDisplay();
+    pomoUpdateRing();
+    showToast(`🍅 Pomodoro ready — ${estFmt(estMins)} timer set, press ▶ to start`);
+  } else {
+    showToast('🍅 Pomodoro ready — press ▶ to start');
+  }
 }
 
 function dailyStar(id) {
@@ -5386,6 +5402,72 @@ function dailyInlineEdit(id) {
   });
 }
 
+function estFmt(mins) {
+  if (!mins) return '';
+  if (mins < 60) return mins + 'm';
+  const h = mins / 60;
+  return (h % 1 === 0 ? h : h.toFixed(1)) + 'h';
+}
+
+function dailyEditEst(id) {
+  const item = dailyItems.find(i => i.id === id);
+  if (!item) return;
+  const existing = document.getElementById('dest-popup-' + id);
+  if (existing) { existing.remove(); return; }
+  document.querySelectorAll('.daily-est-popup, .daily-link-popup').forEach(el => el.remove());
+  const row = document.getElementById('ditem-' + id);
+  if (!row) return;
+  const presets = [15, 30, 45, 60, 90, 120];
+  const popup = document.createElement('div');
+  popup.className = 'daily-est-popup';
+  popup.id = 'dest-popup-' + id;
+  popup.innerHTML = `<div class="daily-est-chips">${presets.map(m => `<button class="daily-est-chip" onclick="dailySetEst(${id},${m})">${estFmt(m)}</button>`).join('')}</div><div style="display:flex;gap:6px"><input class="daily-link-input" id="dest-inp-${id}" placeholder="Custom minutes…" style="flex:1" /><button class="daily-link-save-btn" onclick="dailySetEstCustom(${id})">Set</button>${item.estMins?`<button class="daily-link-clear-btn" onclick="dailyClearEst(${id})">Clear</button>`:''}</div>`;
+  document.body.appendChild(popup);
+  const rowRect = row.getBoundingClientRect();
+  popup.style.position = 'fixed';
+  popup.style.left = rowRect.left + 'px';
+  const spaceBelow = window.innerHeight - rowRect.bottom;
+  if (spaceBelow < 140) {
+    popup.style.top = 'auto';
+    popup.style.bottom = (window.innerHeight - rowRect.top + 6) + 'px';
+  } else {
+    popup.style.top = (rowRect.bottom + 6) + 'px';
+    popup.style.bottom = 'auto';
+  }
+  setTimeout(() => {
+    function outsideDEst(e) { if (!popup.contains(e.target)) { popup.remove(); document.removeEventListener('mousedown', outsideDEst); } }
+    document.addEventListener('mousedown', outsideDEst);
+  }, 0);
+  const inp = document.getElementById('dest-inp-' + id);
+  if (inp) inp.addEventListener('keydown', e => { if (e.key === 'Enter') dailySetEstCustom(id); if (e.key === 'Escape') popup.remove(); });
+}
+
+function dailySetEst(id, mins) {
+  const item = dailyItems.find(i => i.id === id);
+  if (item) item.estMins = mins;
+  const popup = document.getElementById('dest-popup-' + id);
+  if (popup) popup.remove();
+  dailySave();
+  dailyRender();
+}
+
+function dailySetEstCustom(id) {
+  const inp = document.getElementById('dest-inp-' + id);
+  if (!inp) return;
+  const v = parseInt(inp.value);
+  if (isNaN(v) || v <= 0) return;
+  dailySetEst(id, v);
+}
+
+function dailyClearEst(id) {
+  const item = dailyItems.find(i => i.id === id);
+  if (item) item.estMins = null;
+  const popup = document.getElementById('dest-popup-' + id);
+  if (popup) popup.remove();
+  dailySave();
+  dailyRender();
+}
+
 function dailyEditLink(id) {
   const item = dailyItems.find(i => i.id === id);
   if (!item) return;
@@ -5635,7 +5717,8 @@ function dailyRender() {
       ? `<span class="daily-item-tag" style="${_tagStyle}" title="${item.taskName}">${item.taskName.length > 22 ? item.taskName.slice(0,22)+'…' : item.taskName}</span>`
       : `<span class="daily-item-tag none">Others</span>`;
     const starHtml = `<button class="daily-item-star${item.starred?' starred':''}" onclick="event.stopPropagation();dailyStar(${item.id})" title="${item.starred?'Unstar':'Star'}">${item.starred?'★':'☆'}</button>`;
-    const pomoHtml = `<button class="daily-item-pomo-btn" onclick="event.stopPropagation();goToPomodoro(${item.taskId||'null'},'${(item.taskName||'').replace(/'/g,"\\'")}','${item.text.replace(/'/g,"\\'")}');" title="Start Pomodoro for this task">🍅</button>`;
+    const pomoHtml = `<button class="daily-item-pomo-btn" onclick="event.stopPropagation();goToPomodoro(${item.taskId||'null'},'${(item.taskName||'').replace(/'/g,"\\'")}','${item.text.replace(/'/g,"\\'")}',${item.estMins||'null'});" title="Start Pomodoro for this task">🍅</button>`;
+    const estHtml = `<button class="daily-item-est${item.estMins?' set':''}" onclick="event.stopPropagation();dailyEditEst(${item.id})" title="Estimated time">${item.estMins?estFmt(item.estMins):'+ time'}</button>`;
     const linkHtml = item.link
       ? `<a href="${item.link}" target="_blank" rel="noopener" class="daily-item-link-btn has-link" onclick="event.stopPropagation()" title="${item.link}">🔗</a>`
       : `<button class="daily-item-link-btn" onclick="event.stopPropagation();dailyEditLink(${item.id})" title="Add link">🔗</button>`;
@@ -5645,6 +5728,7 @@ function dailyRender() {
         <span class="daily-item-text" ondblclick="dailyInlineEdit(${item.id})" title="Double-click to edit">${item.text} ${pomoHtml} ${starHtml} ${linkHtml}</span>
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        ${estHtml}
         ${tagHtml}
         <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end">
           <div style="display:flex;gap:4px;margin-right:3px">
@@ -5703,7 +5787,9 @@ function dailyRender() {
   if (pill) {
     const pct = totalCount > 0 ? Math.round(doneCount / totalCount * 100) : 0;
     const barColor = pct === 100 ? 'var(--mint2)' : 'var(--sage)';
-    pill.innerHTML = `<span style="font-weight:700;color:var(--text2)">${doneCount}/${totalCount}</span><div style="width:48px;height:2px;background:var(--surface3);border-radius:999px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${barColor};border-radius:999px"></div></div><span>${focusHours}</span>`;
+    const estTotalMins = todayItems.reduce((s, i) => s + (i.estMins || 0), 0);
+    const estHtml = estTotalMins > 0 ? `<span title="Estimated time for today's remaining tasks">Est ${estFmt(estTotalMins)}</span>` : '';
+    pill.innerHTML = `<span style="font-weight:700;color:var(--text2)">${doneCount}/${totalCount}</span><div style="width:48px;height:2px;background:var(--surface3);border-radius:999px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${barColor};border-radius:999px"></div></div><span>${focusHours}</span>${estHtml}`;
   }
 
   const backlogPanel = document.getElementById('daily-panel-backlog');
