@@ -239,6 +239,7 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
 .daily-item-est{font-size:11px;padding:2px 6px;border-radius:999px;white-space:nowrap;border:1px dashed transparent;background:none;color:var(--muted2);cursor:pointer;font-family:'Lato',sans-serif;transition:all .15s;flex-shrink:0}
 .daily-item-est.set{border-color:transparent;color:var(--muted);background:none}
 .daily-item-est:hover{border-color:var(--sage);color:var(--sage2)}
+.daily-item-est-icon{font-size:13px;line-height:1;position:relative;top:2px}
 .daily-est-popup{position:fixed;z-index:9999;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:10px;box-shadow:0 4px 20px rgba(30,64,48,.14);min-width:200px}
 .daily-est-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
 .daily-est-chip{border:1px solid var(--border2);background:var(--surface2);color:var(--text);border-radius:7px;padding:4px 9px;font-size:12px;cursor:pointer;font-family:'Lato',sans-serif}
@@ -2240,7 +2241,7 @@ function pdpRenderBacklog(body, footer) {
               <input type="date" class="backlog-date-hidden" value="${i.scheduledDate || ''}" onchange="pdpBacklogSetSchedule(${i.id}, this.value)">
             </span>
             ${i.scheduledDate ? `<button onclick="pdpBacklogSetSchedule(${i.id},'')" style="font-size:10px;background:none;border:none;color:var(--muted2);cursor:pointer;padding:0;opacity:.6" title="Clear date">✕</button>` : ''}
-            <button class="daily-item-est${i.estMins?' set':''}" onclick="event.stopPropagation();backlogEditEst(${i.id})" title="Estimated time" style="margin-left:auto">${i.estMins?estFmt(i.estMins):'+ time'}</button>
+            <button class="daily-item-est${i.estMins?' set':''}" onclick="event.stopPropagation();backlogEditEst(${i.id})" title="Estimated time" style="margin-left:auto">${i.estMins?estFmt(i.estMins):'<span class="daily-item-est-icon">⏱</span>'}</button>
           </div>
         </div>`).join('');
 
@@ -5836,7 +5837,7 @@ function dailyRender() {
       : `<span class="daily-item-tag none">Others</span>`;
     const starHtml = `<button class="daily-item-star${item.starred?' starred':''}" onclick="event.stopPropagation();dailyStar(${item.id})" title="${item.starred?'Unstar':'Star'}">${item.starred?'★':'☆'}</button>`;
     const pomoHtml = `<button class="daily-item-pomo-btn" onclick="event.stopPropagation();goToPomodoro(${item.taskId||'null'},'${(item.taskName||'').replace(/'/g,"\\'")}','${item.text.replace(/'/g,"\\'")}',${item.estMins||'null'});" title="Start Pomodoro for this task">🍅</button>`;
-    const estHtml = `<button class="daily-item-est${item.estMins?' set':''}" onclick="event.stopPropagation();dailyEditEst(${item.id})" title="Estimated time">${item.estMins?estFmt(item.estMins):'+ time'}</button>`;
+    const estHtml = `<button class="daily-item-est${item.estMins?' set':''}" onclick="event.stopPropagation();dailyEditEst(${item.id})" title="Estimated time">${item.estMins?estFmt(item.estMins):'<span class="daily-item-est-icon">⏱</span>'}</button>`;
     const linkHtml = item.link
       ? `<a href="${item.link}" target="_blank" rel="noopener" class="daily-item-link-btn has-link" onclick="event.stopPropagation()" title="${item.link}">🔗</a>`
       : `<button class="daily-item-link-btn" onclick="event.stopPropagation();dailyEditLink(${item.id})" title="Add link">🔗</button>`;
@@ -5924,7 +5925,7 @@ function dailyRender() {
           const blinkHtml = i.link
             ? `<a href="${i.link}" target="_blank" rel="noopener" class="daily-item-link-btn has-link" onclick="event.stopPropagation()" title="${i.link}">🔗</a>`
             : `<button class="daily-item-link-btn" onclick="event.stopPropagation();backlogEditLink(${i.id})" title="Add link">🔗</button>`;
-          const bestHtml = `<button class="daily-item-est${i.estMins?' set':''}" onclick="event.stopPropagation();backlogEditEst(${i.id})" title="Estimated time">${i.estMins?estFmt(i.estMins):'+ time'}</button>`;
+          const bestHtml = `<button class="daily-item-est${i.estMins?' set':''}" onclick="event.stopPropagation();backlogEditEst(${i.id})" title="Estimated time">${i.estMins?estFmt(i.estMins):'<span class="daily-item-est-icon">⏱</span>'}</button>`;
           return `<div class="backlog-item" id="bitem-${i.id}" draggable="true" ondragstart="backlogDragStart(event,${i.id})" ondragover="backlogDragOver(event,${i.id})" ondragleave="backlogDragLeave(event)" ondrop="backlogDrop(event,${i.id})" ondragend="backlogDragEnd(event)" style="cursor:grab;position:relative">
             <div class="backlog-item-row1">
               <span class="backlog-item-text" ondblclick="backlogInlineEdit(${i.id})" title="Double-click to edit">${i.text}</span>
