@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>JH Task Tracker</title>
 <meta name="theme-color" id="meta-theme-color" content="#5a8a6a">
-<link rel="icon" type="image/svg+xml" id="favicon-link" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%235a8a6a'/><text x='16' y='22' font-size='18' text-anchor='middle'>🌿</text></svg>">
+<link rel="icon" type="image/svg+xml" id="favicon-link" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%235a8a6a'/><text x='16' y='22' font-size='17' text-anchor='middle'>🌿</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Lato:wght@300;400;700&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -22,7 +22,7 @@
 [data-theme="orange"] {
   --bg:#f7f5f2; --surface:#fff; --surface2:#f2eee8; --surface3:#e9e3d9;
   --border:#e6ddd2; --border2:#d0c2b0;
-  --sage:#da7756; --sage2:#c15f3c; --sage3:#1a1f2e;
+  --sage:#da7756; --sage2:#c15f3c; --sage3:#a2492f;
   --mint:#e2967a; --mint2:#da7756; --forest:#211a16;
   --tea:#e2967a; --text:#1a1f2e; --text2:#2e3a50;
   --muted:#6a7a99; --muted2:#9aaabb;
@@ -2588,9 +2588,8 @@ function wrRender() {
       var c = parseDate(t.completedAt);
       return c >= start && c <= end;
     }
-    var d = t.date ? parseDate(t.date) : null;
-    var due = t.due ? parseDate(t.due) : null;
-    return (d && d >= start && d <= end) || (due && due >= start && due <= end);
+    var ref = t.due ? parseDate(t.due) : (t.date ? parseDate(t.date) : null);
+    return ref && ref >= start && ref <= end;
   }).length;
   // Use status history to count tasks that were in-progress/in-review during this week
   var ipCount = tasks.filter(function(t) { return statusAtDate(t, end) === 'in-progress'; }).length;
@@ -2748,9 +2747,8 @@ function wrRenderDone(start, end, offset) {
       var c = parseDate(t.completedAt);
       return c >= start && c <= end;
     }
-    var d = t.date ? parseDate(t.date) : null;
-    var due = t.due ? parseDate(t.due) : null;
-    return (d && d >= start && d <= end) || (due && due >= start && due <= end);
+    var ref = t.due ? parseDate(t.due) : (t.date ? parseDate(t.date) : null);
+    return ref && ref >= start && ref <= end;
   }).sort(function(a,b){ return parseDate(b.completedAt||b.date||0) - new Date(a.completedAt||a.date||0); });
   if (doneList.length === 0) {
     if (offset !== 0) {
@@ -6648,25 +6646,23 @@ function applyTheme(id) {
   if (btn) btn.textContent = t.icon;
   const leaf = document.getElementById('logo-leaf-inner');
   if (leaf) leaf.innerHTML = id === 'orange'
-    ? '<svg width="22" height="22" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="7" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.5)" stroke-width="1"/><line x1="16" y1="4" x2="16" y2="28" stroke="white" stroke-width="1.5" stroke-opacity="0.7"/><line x1="4" y1="16" x2="28" y2="16" stroke="white" stroke-width="1.5" stroke-opacity="0.7"/><circle cx="16" cy="16" r="2.5" fill="white"/></svg>'
+    ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12c2 -2.96 0 -7 -1 -8c0 3.038 -1.773 4.741 -3 6c-1.226 1.26 -2 3.24 -2 5a6 6 0 1 0 12 0c0 -1.532 -1.056 -3.94 -2 -5c-1.786 3 -2.791 3 -4 2z"/></svg>'
     : '🌿';
   // Update browser tab favicon + theme-color
   const isOrange = id === 'orange';
   const favicon = document.getElementById('favicon-link');
   if (favicon) {
     if (isOrange) {
-      favicon.href = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23da7756'/><circle cx='16' cy='16' r='7' fill='rgba(255,255,255,0.15)' stroke='rgba(255,255,255,0.5)' stroke-width='1'/><line x1='16' y1='4' x2='16' y2='28' stroke='white' stroke-width='1.5' stroke-opacity='0.7'/><line x1='4' y1='16' x2='28' y2='16' stroke='white' stroke-width='1.5' stroke-opacity='0.7'/><circle cx='16' cy='16' r='2.5' fill='white'/></svg>";
+      favicon.href = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23da7756'/><path d='M16 15c1.6 -2.37 0 -5.6 -0.8 -6.4c0 2.43 -1.42 3.79 -2.4 4.8c-0.98 1.01 -1.6 2.59 -1.6 4a4.8 4.8 0 1 0 9.6 0c0 -1.23 -0.85 -3.15 -1.6 -4c-1.43 2.4 -2.23 2.4 -3.2 1.6z' fill='none' stroke='white' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/></svg>";
     } else {
-      favicon.href = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%235a8a6a'/><text x='16' y='22' font-size='18' text-anchor='middle'>🌿</text></svg>";
+      favicon.href = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%235a8a6a'/><text x='16' y='22' font-size='17' text-anchor='middle'>🌿</text></svg>";
     }
   }
   const metaColor = document.getElementById('meta-theme-color');
   if (metaColor) metaColor.content = isOrange ? '#da7756' : '#5a8a6a';
   // Update AI greeting brand icon
   document.querySelectorAll('.ai-brand-icon').forEach(function(el) {
-    el.innerHTML = id === 'orange'
-      ? '<svg width=\"14\" height=\"14\" viewBox=\"0 0 32 32\" fill=\"none\" style=\"vertical-align:middle;margin:0 1px\"><circle cx=\"16\" cy=\"16\" r=\"7\" fill=\"rgba(218,119,86,0.15)\" stroke=\"#da7756\" stroke-width=\"1.5\"/><line x1=\"16\" y1=\"4\" x2=\"16\" y2=\"28\" stroke=\"#da7756\" stroke-width=\"1.5\" stroke-opacity=\"0.8\"/><line x1=\"4\" y1=\"16\" x2=\"28\" y2=\"16\" stroke=\"#da7756\" stroke-width=\"1.5\" stroke-opacity=\"0.8\"/><circle cx=\"16\" cy=\"16\" r=\"2.5\" fill=\"#da7756\"/></svg>'
-      : '🌿';
+    el.innerHTML = id === 'orange' ? '🔥' : '🌿';
   });
   // Refresh pomodoro ring color immediately
   const ring = document.getElementById('pomo-ring');
