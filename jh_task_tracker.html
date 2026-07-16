@@ -1166,6 +1166,11 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
           <div id="routine-day-chips" style="display:flex;gap:6px"></div>
         </div>
         <div class="form-group">
+          <label class="form-label">Estimated time <span style="color:var(--muted2);font-weight:400">(optional)</span></label>
+          <div id="routine-est-chips" style="display:flex;gap:6px"></div>
+          <input class="form-input" id="routine-est-custom" placeholder="Custom minutes…" onkeydown="if(event.key==='Enter'){event.preventDefault();routineSetEstCustom();}" style="width:100%;box-sizing:border-box;margin-top:6px">
+        </div>
+        <div class="form-group">
           <label class="form-label">Link to project <span style="color:var(--muted2);font-weight:400">(optional)</span></label>
           <select class="form-input" id="routine-task-select" style="width:100%;box-sizing:border-box">
             <option value="">No project</option>
@@ -2235,6 +2240,7 @@ function pdpRenderBacklog(body, footer) {
               <input type="date" class="backlog-date-hidden" value="${i.scheduledDate || ''}" onchange="pdpBacklogSetSchedule(${i.id}, this.value)">
             </span>
             ${i.scheduledDate ? `<button onclick="pdpBacklogSetSchedule(${i.id},'')" style="font-size:10px;background:none;border:none;color:var(--muted2);cursor:pointer;padding:0;opacity:.6" title="Clear date">✕</button>` : ''}
+            <button class="daily-item-est${i.estMins?' set':''}" onclick="event.stopPropagation();backlogEditEst(${i.id})" title="Estimated time" style="margin-left:auto">${i.estMins?estFmt(i.estMins):'+ time'}</button>
           </div>
         </div>`).join('');
 
@@ -2371,6 +2377,7 @@ function pdpRenderRoutines(body, footer) {
           <div style="display:flex;align-items:center;gap:5px">
             <span class="pdp-item-text" style="font-weight:500">${escHtml(r.text)}</span>
             ${r.link ? `<a href="${r.link}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="${r.link}" style="flex-shrink:0;opacity:.7;text-decoration:none">🔗</a>` : ''}
+            ${r.estMins ? `<span class="daily-item-est set" style="cursor:default;flex-shrink:0;margin-left:auto">${estFmt(r.estMins)}</span>` : ''}
           </div>
           <div style="font-size:11px;color:var(--muted2);font-family:'DM Mono',monospace">${dayStr || 'No days set'}</div>
         </div>`;
@@ -5042,6 +5049,7 @@ function backlogAutoSchedule() {
       taskId: item.taskId || null,
       taskName: item.taskName || null,
       link: item.link || null,
+      estMins: item.estMins || null,
       done: false,
       ts: new Date().toISOString()
     });
@@ -5064,6 +5072,7 @@ let routines = JSON.parse(localStorage.getItem(ROUTINE_KEY) || '[]') || [];
 const ROUTINE_DAY_LABELS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const ROUTINE_DAY_JS = [1,2,3,4,5,6,0]; // maps display index -> JS Date.getDay() value
 let _routineEditDays = [];
+let _routineEditEst = null;
 
 function routinesSaveStore() { localStorage.setItem(ROUTINE_KEY, JSON.stringify(routines)); }
 
@@ -5082,6 +5091,7 @@ function routineGenerate() {
       taskId: r.taskId || null,
       taskName: r.taskName || null,
       link: r.link || null,
+      estMins: r.estMins || null,
       done: false,
       ts: new Date().toISOString(),
       routineId: r.id
@@ -5109,6 +5119,7 @@ function routinesRenderList() {
         const tagHtml = r.taskName
           ? `<span class="daily-item-tag" style="${tagStyle}flex-shrink:0" title="${r.taskName}">${r.taskName.length > 22 ? r.taskName.slice(0,22)+'…' : r.taskName}</span>`
           : '';
+        const estHtml = r.estMins ? `<span class="daily-item-est set" style="cursor:default;flex-shrink:0">${estFmt(r.estMins)}</span>` : '';
         return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);cursor:pointer" onclick="routineOpenEdit(${idx})">
           <div style="min-width:0;flex:1">
             <div style="font-size:13px;color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:5px">
@@ -5117,6 +5128,7 @@ function routinesRenderList() {
             </div>
             <div style="font-size:11px;color:var(--muted2);font-family:'DM Mono',monospace;margin-top:2px">${dayStr || 'No days set'}</div>
           </div>
+          ${estHtml}
           ${tagHtml}
           <span style="font-size:13px;color:var(--muted2);flex-shrink:0">›</span>
         </div>`;
@@ -5142,6 +5154,32 @@ function routineToggleDay(d) {
   routineRenderDayChips();
 }
 
+function routineRenderEstChips() {
+  const el = document.getElementById('routine-est-chips');
+  if (!el) return;
+  const presets = [15, 30, 45, 60, 90, 120];
+  el.innerHTML = presets.map(m => {
+    const active = _routineEditEst === m;
+    return `<button type="button" onclick="routineSetEst(${m})" style="flex:1;height:32px;border-radius:8px;border:1px solid ${active ? 'var(--sage)' : 'var(--border)'};background:${active ? 'var(--sage)' : 'var(--surface)'};color:${active ? '#fff' : 'var(--muted)'};font-size:11px;font-family:'Lato',sans-serif;cursor:pointer;transition:all .15s">${estFmt(m)}</button>`;
+  }).join('');
+}
+
+function routineSetEst(mins) {
+  _routineEditEst = (_routineEditEst === mins) ? null : mins;
+  const inp = document.getElementById('routine-est-custom');
+  if (inp) inp.value = '';
+  routineRenderEstChips();
+}
+
+function routineSetEstCustom() {
+  const inp = document.getElementById('routine-est-custom');
+  if (!inp) return;
+  const v = parseInt(inp.value);
+  if (isNaN(v) || v <= 0) return;
+  _routineEditEst = v;
+  routineRenderEstChips();
+}
+
 function routineOpenEdit(idx, presetTaskId) {
   const r = idx !== undefined ? routines[idx] : null;
   document.getElementById('routine-edit-title').textContent = r ? 'Edit routine' : 'New routine';
@@ -5150,6 +5188,10 @@ function routineOpenEdit(idx, presetTaskId) {
   document.getElementById('routine-delete-btn').style.display = r ? '' : 'none';
   _routineEditDays = r ? (r.days || []).slice() : [];
   routineRenderDayChips();
+  _routineEditEst = r && r.estMins ? r.estMins : null;
+  const estCustomInp = document.getElementById('routine-est-custom');
+  if (estCustomInp) estCustomInp.value = '';
+  routineRenderEstChips();
   const sel = document.getElementById('routine-task-select');
   const taskOptions = tasks.filter(t => t.status !== 'done').map(t => `<option value="${t.id}">${t.name.length > 35 ? t.name.slice(0,35)+'…' : t.name}</option>`).join('');
   sel.innerHTML = `<option value="">No project</option>${taskOptions}`;
@@ -5171,6 +5213,12 @@ function routineSave() {
   const taskId = sel.value ? parseInt(sel.value) : null;
   const task = taskId ? tasks.find(t => t.id === taskId) : null;
   const link = document.getElementById('routine-link').value.trim() || null;
+  const estCustomInp = document.getElementById('routine-est-custom');
+  if (estCustomInp && estCustomInp.value.trim()) {
+    const v = parseInt(estCustomInp.value);
+    if (!isNaN(v) && v > 0) _routineEditEst = v;
+  }
+  const estMins = _routineEditEst || null;
   const idxVal = document.getElementById('routine-edit-id').value;
   if (idxVal !== '') {
     const r = routines[parseInt(idxVal)];
@@ -5179,8 +5227,9 @@ function routineSave() {
     r.taskId = task ? task.id : null;
     r.taskName = task ? task.name : null;
     r.link = link;
+    r.estMins = estMins;
   } else {
-    routines.push({ id: Date.now(), text, days: _routineEditDays.slice(), taskId: task ? task.id : null, taskName: task ? task.name : null, link, lastGenDate: null });
+    routines.push({ id: Date.now(), text, days: _routineEditDays.slice(), taskId: task ? task.id : null, taskName: task ? task.name : null, link, estMins, lastGenDate: null });
   }
   routinesSaveStore();
   routinesRenderList();
@@ -5248,7 +5297,7 @@ function dailyMoveToBacklog(id) {
   const item = dailyItems.find(i => i.id === id);
   if (!item) return;
   dailyItems = dailyItems.filter(i => i.id !== id);
-  backlogItems.unshift({ id: Date.now(), text: item.text, taskId: item.taskId || null, taskName: item.taskName || null, link: item.link || null, ts: new Date().toISOString() });
+  backlogItems.unshift({ id: Date.now(), text: item.text, taskId: item.taskId || null, taskName: item.taskName || null, link: item.link || null, estMins: item.estMins || null, ts: new Date().toISOString() });
   dailySave();
   dailyRender();
   showToast('Moved to backlog');
@@ -5311,6 +5360,7 @@ function dailyMoveToToday(id) {
     taskId: item.taskId || null,
     taskName: item.taskName || null,
     link: item.link || null,
+    estMins: item.estMins || null,
     done: false,
     ts: new Date().toISOString()
   });
@@ -5466,6 +5516,74 @@ function dailyClearEst(id) {
   if (popup) popup.remove();
   dailySave();
   dailyRender();
+}
+
+// ── Backlog estimated time (mirrors dailyEditEst) ──────────────
+function backlogRenderRefresh() {
+  if (document.getElementById('daily-panel-backlog')) dailyRender();
+  if (typeof _pdpTaskId !== 'undefined' && _pdpTaskId !== null && _pdpTab === 'backlog') {
+    const body = document.getElementById('pdp-body'), footer = document.getElementById('pdp-footer');
+    if (body && footer) pdpRenderBacklog(body, footer);
+  }
+}
+
+function backlogEditEst(id) {
+  const item = backlogItems.find(i => i.id === id);
+  if (!item) return;
+  const existing = document.getElementById('best-popup-' + id);
+  if (existing) { existing.remove(); return; }
+  document.querySelectorAll('.daily-est-popup, .daily-link-popup').forEach(el => el.remove());
+  const row = document.getElementById('bitem-' + id) || document.getElementById('pdp-bl-' + id);
+  if (!row) return;
+  const presets = [15, 30, 45, 60, 90, 120];
+  const popup = document.createElement('div');
+  popup.className = 'daily-est-popup';
+  popup.id = 'best-popup-' + id;
+  popup.innerHTML = `<div class="daily-est-chips">${presets.map(m => `<button class="daily-est-chip" onclick="backlogSetEst(${id},${m})">${estFmt(m)}</button>`).join('')}</div><div style="display:flex;gap:6px"><input class="daily-link-input" id="best-inp-${id}" placeholder="Custom minutes…" style="flex:1" /><button class="daily-link-save-btn" onclick="backlogSetEstCustom(${id})">Set</button>${item.estMins?`<button class="daily-link-clear-btn" onclick="backlogClearEst(${id})">Clear</button>`:''}</div>`;
+  document.body.appendChild(popup);
+  const rowRect = row.getBoundingClientRect();
+  popup.style.position = 'fixed';
+  popup.style.left = rowRect.left + 'px';
+  const spaceBelow = window.innerHeight - rowRect.bottom;
+  if (spaceBelow < 140) {
+    popup.style.top = 'auto';
+    popup.style.bottom = (window.innerHeight - rowRect.top + 6) + 'px';
+  } else {
+    popup.style.top = (rowRect.bottom + 6) + 'px';
+    popup.style.bottom = 'auto';
+  }
+  setTimeout(() => {
+    function outsideBEst(e) { if (!popup.contains(e.target)) { popup.remove(); document.removeEventListener('mousedown', outsideBEst); } }
+    document.addEventListener('mousedown', outsideBEst);
+  }, 0);
+  const inp = document.getElementById('best-inp-' + id);
+  if (inp) inp.addEventListener('keydown', e => { if (e.key === 'Enter') backlogSetEstCustom(id); if (e.key === 'Escape') popup.remove(); });
+}
+
+function backlogSetEst(id, mins) {
+  const item = backlogItems.find(i => i.id === id);
+  if (item) item.estMins = mins;
+  const popup = document.getElementById('best-popup-' + id);
+  if (popup) popup.remove();
+  dailySave();
+  backlogRenderRefresh();
+}
+
+function backlogSetEstCustom(id) {
+  const inp = document.getElementById('best-inp-' + id);
+  if (!inp) return;
+  const v = parseInt(inp.value);
+  if (isNaN(v) || v <= 0) return;
+  backlogSetEst(id, v);
+}
+
+function backlogClearEst(id) {
+  const item = backlogItems.find(i => i.id === id);
+  if (item) item.estMins = null;
+  const popup = document.getElementById('best-popup-' + id);
+  if (popup) popup.remove();
+  dailySave();
+  backlogRenderRefresh();
 }
 
 function dailyEditLink(id) {
@@ -5806,6 +5924,7 @@ function dailyRender() {
           const blinkHtml = i.link
             ? `<a href="${i.link}" target="_blank" rel="noopener" class="daily-item-link-btn has-link" onclick="event.stopPropagation()" title="${i.link}">🔗</a>`
             : `<button class="daily-item-link-btn" onclick="event.stopPropagation();backlogEditLink(${i.id})" title="Add link">🔗</button>`;
+          const bestHtml = `<button class="daily-item-est${i.estMins?' set':''}" onclick="event.stopPropagation();backlogEditEst(${i.id})" title="Estimated time">${i.estMins?estFmt(i.estMins):'+ time'}</button>`;
           return `<div class="backlog-item" id="bitem-${i.id}" draggable="true" ondragstart="backlogDragStart(event,${i.id})" ondragover="backlogDragOver(event,${i.id})" ondragleave="backlogDragLeave(event)" ondrop="backlogDrop(event,${i.id})" ondragend="backlogDragEnd(event)" style="cursor:grab;position:relative">
             <div class="backlog-item-row1">
               <span class="backlog-item-text" ondblclick="backlogInlineEdit(${i.id})" title="Double-click to edit">${i.text}</span>
@@ -5816,6 +5935,7 @@ function dailyRender() {
             <div class="backlog-item-row2">
               <button class="backlog-to-today" onclick="dailyMoveToToday(${i.id})" title="Move to today">←</button>
               <span class="backlog-schedule-wrap"><button class="backlog-schedule-btn${i.scheduledDate ? ' has-date' : ''}" title="${i.scheduledDate ? 'Change scheduled date' : 'Schedule for a date'}" onclick="this.nextElementSibling.showPicker?this.nextElementSibling.showPicker():this.nextElementSibling.click()">${i.scheduledDate ? '<span style="position:relative;top:1px">' + (d=>{const parts=d.toLocaleDateString('en',{weekday:'short',month:'short',day:'numeric'}).replace(',','').split(' ');return parts[1]+' '+parts[2]+' '+parts[0];})(new Date(i.scheduledDate+'T00:00:00')) + '</span>' : '<span style="position:relative;top:1px">📅</span>'}</button><input type="date" class="backlog-date-hidden" value="${i.scheduledDate || ''}" onchange="backlogSetSchedule(${i.id}, this.value)"></span>
+              ${bestHtml}
               <button class="daily-item-tag side-tag${i.taskName && i.taskId ? '' : ' none'}" data-blp="${i.id}" onclick="dailyBacklogLinkTask(${i.id})" title="${i.taskName || 'Link to project'}" style="margin-left:auto;${tagStyle}">${i.taskName ? '⛓ ' : ''}${tagLabel}</button>
             </div>
           </div>`;
