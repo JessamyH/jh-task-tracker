@@ -1439,6 +1439,7 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
       <button class="btn" id="pomo-exp-preset-all" onclick="pomoExportPreset('all')" style="font-size:11px;padding:5px 11px">All time</button>
+      <button class="btn" id="pomo-exp-preset-week" onclick="pomoExportPreset('week')" style="font-size:11px;padding:5px 11px">Last week</button>
       <button class="btn" id="pomo-exp-preset-month" onclick="pomoExportPreset('month')" style="font-size:11px;padding:5px 11px">Last month</button>
       <button class="btn" id="pomo-exp-preset-custom" onclick="pomoExportToggleCustom()" style="font-size:11px;padding:5px 11px;position:relative">
         <span id="pomo-exp-custom-label">Custom</span>
@@ -1455,7 +1456,7 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
         <input class="form-input" type="date" id="pomo-exp-to">
       </div>
     </div>
-    <div class="modal-actions" style="justify-content:flex-end">
+    <div class="modal-actions" style="justify-content:space-between">
       <button class="btn" onclick="pomoConfirmClear()" style="font-size:11px;color:var(--rose);border-color:rgba(192,57,43,.4)" onmouseover="this.style.background='var(--rose)';this.style.color='#fff';this.style.borderColor='var(--rose)'" onmouseout="this.style.background='';this.style.color='var(--rose)';this.style.borderColor='rgba(192,57,43,.4)'">Clear log</button>
       <div style="display:flex;gap:8px">
         <button class="btn" onclick="closePomoExportModal()">Cancel</button>
@@ -3746,7 +3747,7 @@ function pomoExportPreset(preset) {
   const now = new Date();
   const toStr = now.toISOString().slice(0,10);
   let fromStr = '';
-  if (preset === '7') {
+  if (preset === 'week') {
     const f = new Date(now); f.setDate(now.getDate() - 6);
     fromStr = f.toISOString().slice(0,10);
   } else if (preset === '14') {
@@ -3796,7 +3797,7 @@ function pomoExportCustomBlur() {
   label.style.display = 'inline';
 }
 function pomoExportHighlight(active) {
-  ['all','month','custom'].forEach(p => {
+  ['all','week','month','custom'].forEach(p => {
     const btn = document.getElementById('pomo-exp-preset-' + p);
     if (btn) { btn.style.borderColor = p === active ? 'var(--sage)' : ''; btn.style.color = p === active ? 'var(--sage2)' : ''; }
   });
