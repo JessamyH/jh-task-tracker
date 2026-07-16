@@ -483,9 +483,10 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
 .pomo-ring-wrap svg{transform:rotate(-90deg)}
 .pomo-ring-bg{fill:none;stroke:var(--surface3);stroke-width:7}
 #pomo-btn-down.active,#pomo-btn-up.active{background:var(--mint2);color:#fff}
-.pomo-ring-fg{fill:none;stroke-width:7;stroke-linecap:round;transition:stroke-dashoffset .9s linear}
+.pomo-ring-fg{fill:none;stroke-width:7;stroke-linecap:round;transition:stroke-dashoffset .9s linear,stroke .5s}
 .pomo-time-inner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
-.pomo-hms{font-family:'DM Mono',monospace;font-size:30px;font-weight:500;color:var(--text);letter-spacing:2px}
+.pomo-hms{font-family:'DM Mono',monospace;font-size:30px;font-weight:500;color:var(--text);letter-spacing:2px;transition:color .4s}
+.pomo-hms.overtime{color:var(--amber)}
 .pomo-lbl{font-size:11px;color:var(--muted);margin-top:3px}
 .pomo-ctrl-row{display:flex;gap:9px;justify-content:center;margin-bottom:6px}
 .pomo-ctrl-btn{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--border2);background:var(--surface);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .15s;font-family:'Lato',sans-serif}
@@ -1930,6 +1931,7 @@ function goToPomodoro(taskId, taskName, itemText, estMins) {
   if (estMins && pomoMode === 'focus' && !pomoRunning) {
     pomoRemaining = estMins * 60;
     pomoTotal = pomoRemaining;
+    pomoOvertime = false; pomoOvertimeSec = 0;
     pomoUpdateDisplay();
     pomoUpdateRing();
     showToast(`🍅 Pomodoro ready — ${estFmt(estMins)} timer set, press ▶ to start`);
@@ -2900,11 +2902,13 @@ let pomoCurNoise = localStorage.getItem('jhtt_pomo_noise') || 'off';
 let pomoVolVal = parseInt(localStorage.getItem('jhtt_pomo_vol')) || 15;
 let pomoActx = null, pomoNoiseNode = null, pomoGainNode = null;
 let pomoSessionStartTime = null;
+let pomoOvertime = false;
+let pomoOvertimeSec = 0;
 
 const POMO_CIRC = 2 * Math.PI * 75;
 const POMO_MODE_NAMES = {focus:'Focus', short:'Short Break', long:'Long Break'};
-const POMO_MODE_COLORS_BASE = {focus:'#5a8a6a', short:'#4a7a8a', long:'#b8860b'};
-const POMO_MODE_COLORS_ORANGE = {focus:'#da7756', short:'#94a3b8', long:'#e09020'};
+const POMO_MODE_COLORS_BASE = {focus:'#5a8a6a', short:'#4a7a8a', long:'#b8860b', overtime:'#b8860b'};
+const POMO_MODE_COLORS_ORANGE = {focus:'#da7756', short:'#94a3b8', long:'#e09020', overtime:'#e09020'};
 function getPomoColors() {
   return document.documentElement.getAttribute('data-theme') === 'orange' ? POMO_MODE_COLORS_ORANGE : POMO_MODE_COLORS_BASE;
 }
@@ -2925,14 +2929,42 @@ function pomoFmt(s) {
 
 function pomoUpdateDisplay() {
   const el = document.getElementById('pomo-display');
-  if (el) el.textContent = pomoCountUp ? pomoFmt(pomoTotal - pomoRemaining) : pomoFmt(pomoRemaining);
+  if (!el) return;
+  if (pomoMode === 'focus' && pomoOvertime) {
+    el.textContent = '+' + pomoFmt(pomoOvertimeSec);
+    el.classList.add('overtime');
+  } else {
+    el.textContent = pomoCountUp ? pomoFmt(pomoTotal - pomoRemaining) : pomoFmt(pomoRemaining);
+    el.classList.remove('overtime');
+  }
 }
 
 function pomoUpdateRing() {
   const ring = document.getElementById('pomo-ring');
   if (!ring) return;
-  const pct = pomoRemaining / pomoTotal;
-  ring.style.strokeDashoffset = POMO_CIRC * (1 - pct);
+  if (pomoMode === 'focus' && pomoOvertime) {
+    ring.style.strokeDashoffset = 0;
+    ring.style.stroke = getPomoColors().overtime;
+  } else {
+    const pct = pomoRemaining / pomoTotal;
+    ring.style.strokeDashoffset = POMO_CIRC * (1 - pct);
+    ring.style.stroke = POMO_MODE_COLORS[pomoMode];
+  }
+}
+
+// Called once, the moment a focus session crosses its estimate — switches the
+// timer into a calm "overtime" state instead of stopping. The estimate is a
+// reference point, not a deadline, so we never force the session to end here.
+function pomoEnterOvertime() {
+  pomoOvertime = true;
+  pomoOvertimeSec = 0;
+  pomoUpdateDisplay();
+  pomoUpdateRing();
+  pomoSetStatus('⏱ Estimate reached — keep going if you need to');
+  showToast('⏱ Estimate reached — take the time you need');
+  pomoPlayEstimateChime();
+  const db = document.getElementById('pomo-done-btn');
+  if (db) db.style.display = 'inline-block';
 }
 
 function pomoUpdateModeBtns() {
@@ -2951,6 +2983,7 @@ function pomoSetMode(m, autoStart=false) {
   const mins = {focus:pomoCfg.focus, short:pomoCfg.short, long:pomoCfg.long};
   pomoRemaining = mins[m] * 60;
   pomoTotal = pomoRemaining;
+  pomoOvertime = false; pomoOvertimeSec = 0;
   if (pomoRunning) { clearInterval(pomoTicker); pomoRunning = false; }
   pomoUpdateDisplay(); pomoUpdateRing(); pomoUpdateModeBtns();
   if (m === 'focus') pomoUpdateDots(); // only update dots when returning to focus
@@ -2987,64 +3020,79 @@ function pomoToggle() {
     if (db) db.style.display = 'none';
     if (pomoMode === 'focus') pomoResumeNoise(); else pomoStopNoise();
     pomoTicker = setInterval(() => {
+      if (pomoMode === 'focus' && pomoOvertime) {
+        pomoOvertimeSec++;
+        pomoUpdateDisplay(); pomoUpdateRing();
+        return;
+      }
       pomoRemaining--;
       pomoUpdateDisplay(); pomoUpdateRing();
       if (pomoRemaining <= 0) {
-        clearInterval(pomoTicker); pomoRunning = false;
-        const pb = document.getElementById('pomo-playbtn');
-        if (pb) pb.textContent = '▶';
-        pomoStopNoise();
-        pomoOnSessionEnd();
+        if (pomoMode === 'focus') {
+          // Estimate reached — ease into overtime instead of hard-stopping.
+          pomoEnterOvertime();
+        } else {
+          clearInterval(pomoTicker); pomoRunning = false;
+          const pb = document.getElementById('pomo-playbtn');
+          if (pb) pb.textContent = '▶';
+          pomoStopNoise();
+          pomoOnSessionEnd();
+        }
       }
     }, 1000);
   }
 }
 
+// Break timers still have a real endpoint — no overtime pressure question there,
+// so short/long breaks keep the original hard-stop behavior.
 function pomoOnSessionEnd() {
-  if (pomoMode === 'focus') {
-    const mins = Math.max(1, Math.round(pomoTotal / 60));
-    const taskSel = document.getElementById('pomo-task-sel');
-    const taskId = taskSel ? parseInt(taskSel.value) || null : null;
-    const taskName = taskId ? (tasks.find(t => t.id === taskId) || {}).name || '—' : 'Others';
-    const noteEl = document.getElementById('pomo-session-note');
-    const note = noteEl ? noteEl.value.trim() : '';
-    const entry = {
-      id: Date.now(),
-      type: 'focus',
-      mins: mins,
-      taskId: taskId,
-      taskName: taskName,
-      note: note,
-      ts: (pomoSessionStartTime || new Date()).toISOString()
-    };
-    pomoLog.unshift(entry);
-    localStorage.setItem(POMO_LOG_KEY, JSON.stringify(pomoLog));
-    pomoSession++;
-    pomoUpdateDots(); pomoRenderStats(); pomoRenderLog();
-    updatePomoNavBadge();
-    pomoPlayCelebration();
-    // Remind to add note if empty
-    if (!note) {
-      setTimeout(() => {
-        const noteEl2 = document.getElementById('pomo-session-note');
-        if (noteEl2) { noteEl2.focus(); noteEl2.style.borderColor = 'var(--sage)'; }
-        showToast('💡 Add a note to this session?');
-      }, 900);
-    }
-    if (pomoSession % pomoCfg.rounds === 0) {
-      // Flash all dots green before resetting
-      const dotsEl = document.getElementById('pomo-dots');
-      if (dotsEl) dotsEl.innerHTML = Array(pomoCfg.rounds).fill('<span class="pomo-dot done"></span>').join('');
-      pomoSetStatus('🎉 Round complete! Long break time.');
-      setTimeout(() => pomoSetMode('long'), 1200);
-    } else {
-      pomoSetStatus('✅ Session done! Take a short break.');
-      setTimeout(() => pomoSetMode('short'), 800);
-    }
+  if (pomoMode === 'long') pomoSession = 0;
+  pomoSetStatus('Break over — back to focus!');
+  setTimeout(() => pomoSetMode('focus'), 800);
+}
+
+// Shared focus-session completion, used whenever the user clicks Done —
+// whether that's before, exactly at, or after the estimate. Focus sessions
+// no longer end themselves; the person decides when a session is over.
+function pomoFinishFocusSession(elapsedSec, wasOvertime) {
+  const mins = Math.max(1, Math.round(elapsedSec / 60));
+  const taskSel = document.getElementById('pomo-task-sel');
+  const taskId = taskSel ? parseInt(taskSel.value) || null : null;
+  const taskName = taskId ? (tasks.find(t => t.id === taskId) || {}).name || '—' : 'Others';
+  const noteEl = document.getElementById('pomo-session-note');
+  const note = noteEl ? noteEl.value.trim() : '';
+  const entry = {
+    id: Date.now(),
+    type: 'focus',
+    mins: mins,
+    taskId: taskId,
+    taskName: taskName,
+    note: note,
+    ts: (pomoSessionStartTime || new Date()).toISOString()
+  };
+  pomoLog.unshift(entry);
+  localStorage.setItem(POMO_LOG_KEY, JSON.stringify(pomoLog));
+  pomoSession++;
+  pomoUpdateDots(); pomoRenderStats(); pomoRenderLog();
+  updatePomoNavBadge();
+  pomoPlayCelebration();
+  // Remind to add note if empty
+  if (!note) {
+    setTimeout(() => {
+      const noteEl2 = document.getElementById('pomo-session-note');
+      if (noteEl2) { noteEl2.focus(); noteEl2.style.borderColor = 'var(--sage)'; }
+      showToast('💡 Add a note to this session?');
+    }, 900);
+  }
+  if (pomoSession % pomoCfg.rounds === 0) {
+    // Flash all dots green before resetting
+    const dotsEl = document.getElementById('pomo-dots');
+    if (dotsEl) dotsEl.innerHTML = Array(pomoCfg.rounds).fill('<span class="pomo-dot done"></span>').join('');
+    pomoSetStatus((wasOvertime ? `✅ ${mins} min logged · ` : '🎉 ') + 'Round complete! Long break time.');
+    setTimeout(() => pomoSetMode('long'), 1200);
   } else {
-    if (pomoMode === 'long') pomoSession = 0;
-    pomoSetStatus('Break over — back to focus!');
-    setTimeout(() => pomoSetMode('focus'), 800);
+    pomoSetStatus(wasOvertime ? `✅ ${mins} min logged · take a short break.` : '✅ Session done! Take a short break.');
+    setTimeout(() => pomoSetMode('short'), 800);
   }
 }
 
@@ -3055,26 +3103,14 @@ function pomoDoneEarly() {
   if (pb) pb.textContent = '▶';
   const db = document.getElementById('pomo-done-btn');
   if (db) db.style.display = 'none';
-  const elapsedMins = Math.max(1, Math.round((pomoTotal - pomoRemaining) / 60));
-  const taskSel = document.getElementById('pomo-task-sel');
-  const taskId = taskSel ? parseInt(taskSel.value) || null : null;
-  const taskName = taskId ? (tasks.find(t => t.id === taskId) || {}).name || '—' : 'Others';
-  const noteEl = document.getElementById('pomo-session-note');
-  const note = noteEl ? noteEl.value.trim() : '';
-  const entry = {
-    id: Date.now(), type: 'focus', mins: elapsedMins,
-    taskId, taskName, note,
-    ts: (pomoSessionStartTime || new Date()).toISOString(),
-    manual: false
-  };
-  pomoLog.unshift(entry);
-  localStorage.setItem(POMO_LOG_KEY, JSON.stringify(pomoLog));
-  pomoSession++;
-  pomoUpdateDots(); pomoRenderStats(); pomoRenderLog(); updatePomoNavBadge();
-  pomoRemaining = pomoTotal;
-  pomoUpdateDisplay(); pomoUpdateRing();
-  pomoSetStatus('✅ Done! ' + elapsedMins + ' min logged.');
   pomoStopNoise();
+  const wasOvertime = pomoOvertime;
+  const elapsedSec = (pomoTotal - pomoRemaining) + (pomoOvertime ? pomoOvertimeSec : 0);
+  // Reset the ring/display before the completion flow, so it's ready for the next session.
+  pomoRemaining = pomoTotal;
+  pomoOvertime = false; pomoOvertimeSec = 0;
+  pomoUpdateDisplay(); pomoUpdateRing();
+  pomoFinishFocusSession(elapsedSec, wasOvertime);
 }
 
 let _pomoResetCount = 0;
@@ -3083,6 +3119,7 @@ let _pomoResetTimer = null;
 function pomoReset() {
   clearInterval(pomoTicker); pomoRunning = false;
   pomoRemaining = pomoTotal;
+  pomoOvertime = false; pomoOvertimeSec = 0;
   pomoUpdateDisplay(); pomoUpdateRing();
   const pb = document.getElementById('pomo-playbtn');
   if (pb) pb.textContent = '▶';
@@ -3109,6 +3146,7 @@ function pomoReset() {
 
 function pomoSkip() {
   clearInterval(pomoTicker); pomoRunning = false;
+  pomoOvertime = false; pomoOvertimeSec = 0;
   pomoStopNoise();
   const pb = document.getElementById('pomo-playbtn');
   if (pb) pb.textContent = '▶';
@@ -3155,6 +3193,7 @@ function pomoAdj(key, delta) {
   if (el) el.value = pomoCfg[key];
   if ((key === 'focus' && pomoMode === 'focus') || (key === 'short' && pomoMode === 'short') || (key === 'long' && pomoMode === 'long')) {
     pomoRemaining = pomoCfg[key] * 60; pomoTotal = pomoRemaining;
+    pomoOvertime = false; pomoOvertimeSec = 0;
     pomoUpdateDisplay(); pomoUpdateRing();
   }
   if (key === 'rounds') pomoUpdateDots();
@@ -3168,6 +3207,7 @@ function pomoSetDirect(key, raw) {
   pomoSaveCfg();
   if ((key === 'focus' && pomoMode === 'focus') || (key === 'short' && pomoMode === 'short') || (key === 'long' && pomoMode === 'long')) {
     pomoRemaining = pomoCfg[key] * 60; pomoTotal = pomoRemaining;
+    pomoOvertime = false; pomoOvertimeSec = 0;
     pomoUpdateDisplay(); pomoUpdateRing();
   }
   if (key === 'rounds') pomoUpdateDots();
@@ -3183,6 +3223,7 @@ function pomoBlur(key, inputEl) {
   inputEl.value = pomoCfg[key];
   if ((key === 'focus' && pomoMode === 'focus') || (key === 'short' && pomoMode === 'short') || (key === 'long' && pomoMode === 'long')) {
     pomoRemaining = pomoCfg[key] * 60; pomoTotal = pomoRemaining;
+    pomoOvertime = false; pomoOvertimeSec = 0;
     pomoUpdateDisplay(); pomoUpdateRing();
   }
 }
@@ -3256,6 +3297,28 @@ function pomoPlayCelebration() {
       gain.gain.linearRampToValueAtTime(0.25, t + 0.04);
       gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
       osc.start(t); osc.stop(t + 0.35);
+    });
+  } catch(e) {}
+}
+
+// A soft, non-urgent nudge for reaching the estimate — deliberately quieter and
+// calmer than the completion chime, since this isn't an achievement, just a checkpoint.
+function pomoPlayEstimateChime() {
+  try {
+    const ctx = pomoGetActx();
+    if (ctx.state === 'suspended') ctx.resume();
+    const notes = [523, 659]; // C5 E5 — soft, unresolved, no triumphant lift
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const t = ctx.currentTime + i * 0.18;
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.14, t + 0.06);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+      osc.start(t); osc.stop(t + 0.5);
     });
   } catch(e) {}
 }
@@ -6660,14 +6723,14 @@ function applyTheme(id) {
   if (btn) btn.textContent = t.icon;
   const leaf = document.getElementById('logo-leaf-inner');
   if (leaf) leaf.innerHTML = id === 'orange'
-    ? '<svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12c2 -2.96 0 -7 -1 -8c0 3.038 -1.773 4.741 -3 6c-1.226 1.26 -2 3.24 -2 5a6 6 0 1 0 12 0c0 -1.532 -1.056 -3.94 -2 -5c-1.786 3 -2.791 3 -4 2z"/></svg>'
+    ? '<svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#ffe4d0" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12c2 -2.96 0 -7 -1 -8c0 3.038 -1.773 4.741 -3 6c-1.226 1.26 -2 3.24 -2 5a6 6 0 1 0 12 0c0 -1.532 -1.056 -3.94 -2 -5c-1.786 3 -2.791 3 -4 2z"/></svg>'
     : '🌿';
   // Update browser tab favicon + theme-color
   const isOrange = id === 'orange';
   const favicon = document.getElementById('favicon-link');
   if (favicon) {
     if (isOrange) {
-      favicon.href = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23da7756'/><path d='M16 16.5c1.87 -2.77 0 -6.53 -0.93 -7.47c0 2.84 -1.66 4.42 -2.8 5.6c-1.14 1.18 -1.87 3.02 -1.87 4.67a5.6 5.6 0 1 0 11.2 0c0 -1.44 -0.99 -3.68 -1.87 -4.67c-1.67 2.8 -2.6 2.8 -3.73 1.87z' fill='none' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>";
+      favicon.href = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23da7756'/><path d='M16 16.5c1.87 -2.77 0 -6.53 -0.93 -7.47c0 2.84 -1.66 4.42 -2.8 5.6c-1.14 1.18 -1.87 3.02 -1.87 4.67a5.6 5.6 0 1 0 11.2 0c0 -1.44 -0.99 -3.68 -1.87 -4.67c-1.67 2.8 -2.6 2.8 -3.73 1.87z' fill='none' stroke='%23ffe4d0' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>";
     } else {
       favicon.href = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%235a8a6a'/><text x='16' y='22' font-size='17' text-anchor='middle'>🌿</text></svg>";
     }
