@@ -238,7 +238,7 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
 .daily-item-pomo-btn:hover{opacity:1;transform:scale(1.2)}
 .daily-item-est{font-size:11px;padding:2px 6px;border-radius:999px;white-space:nowrap;border:1px dashed transparent;background:none;color:var(--muted2);cursor:pointer;font-family:'Lato',sans-serif;transition:all .15s;flex-shrink:0}
 .daily-item-est.set{border-color:transparent;color:var(--muted);background:none}
-.daily-item-est:hover{border-color:var(--sage);color:var(--sage2)}
+.daily-item-est:hover{color:var(--sage2)}
 .daily-item-est-icon{font-size:13px;line-height:1;position:relative;top:2px}
 .daily-est-popup{position:fixed;z-index:9999;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:10px;box-shadow:0 4px 20px rgba(30,64,48,.14);min-width:200px}
 .daily-est-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
@@ -2872,7 +2872,9 @@ function closePomoSettings() {
 
 // ── Pomodoro Timer
 const POMO_LOG_KEY = 'jhtt_pomo_log';
-let pomoCfg = {focus:60,short:5,long:15,rounds:4};
+const POMO_CFG_KEY = 'jhtt_pomo_cfg';
+let pomoCfg = Object.assign({focus:60,short:5,long:15,rounds:4}, JSON.parse(localStorage.getItem(POMO_CFG_KEY) || '{}'));
+function pomoSaveCfg() { localStorage.setItem(POMO_CFG_KEY, JSON.stringify(pomoCfg)); }
 let pomoMode = 'focus';
 let pomoRemaining = 60*60;
 let pomoTotal = 60*60;
@@ -2881,8 +2883,8 @@ let pomoTicker = null;
 let pomoCountUp = localStorage.getItem('jhtt_pomo_countup') === '1';
 let pomoSession = 0;
 let pomoLog = JSON.parse(localStorage.getItem(POMO_LOG_KEY) || '[]');
-let pomoCurNoise = 'off';
-let pomoVolVal = 15;
+let pomoCurNoise = localStorage.getItem('jhtt_pomo_noise') || 'off';
+let pomoVolVal = parseInt(localStorage.getItem('jhtt_pomo_vol')) || 15;
 let pomoActx = null, pomoNoiseNode = null, pomoGainNode = null;
 let pomoSessionStartTime = null;
 
@@ -2987,7 +2989,7 @@ function pomoToggle() {
 
 function pomoOnSessionEnd() {
   if (pomoMode === 'focus') {
-    const mins = pomoCfg.focus;
+    const mins = Math.max(1, Math.round(pomoTotal / 60));
     const taskSel = document.getElementById('pomo-task-sel');
     const taskId = taskSel ? parseInt(taskSel.value) || null : null;
     const taskName = taskId ? (tasks.find(t => t.id === taskId) || {}).name || '—' : 'Others';
@@ -3135,6 +3137,7 @@ function pomoUpdateDots() {
 function pomoAdj(key, delta) {
   const mn = {focus:1,short:1,long:1,rounds:1}, mx = {focus:90,short:30,long:60,rounds:8};
   pomoCfg[key] = Math.max(mn[key], Math.min(mx[key], pomoCfg[key] + delta));
+  pomoSaveCfg();
   const el = document.getElementById('pv-' + key);
   if (el) el.value = pomoCfg[key];
   if ((key === 'focus' && pomoMode === 'focus') || (key === 'short' && pomoMode === 'short') || (key === 'long' && pomoMode === 'long')) {
@@ -3149,6 +3152,7 @@ function pomoSetDirect(key, raw) {
   const v = parseInt(raw);
   if (isNaN(v)) return;
   pomoCfg[key] = Math.max(mn[key], Math.min(mx[key], v));
+  pomoSaveCfg();
   if ((key === 'focus' && pomoMode === 'focus') || (key === 'short' && pomoMode === 'short') || (key === 'long' && pomoMode === 'long')) {
     pomoRemaining = pomoCfg[key] * 60; pomoTotal = pomoRemaining;
     pomoUpdateDisplay(); pomoUpdateRing();
@@ -3162,6 +3166,7 @@ function pomoBlur(key, inputEl) {
   if (isNaN(v) || v < mn[key]) { pomoCfg[key] = mn[key]; }
   else if (v > mx[key]) { pomoCfg[key] = mx[key]; }
   else { pomoCfg[key] = v; }
+  pomoSaveCfg();
   inputEl.value = pomoCfg[key];
   if ((key === 'focus' && pomoMode === 'focus') || (key === 'short' && pomoMode === 'short') || (key === 'long' && pomoMode === 'long')) {
     pomoRemaining = pomoCfg[key] * 60; pomoTotal = pomoRemaining;
@@ -3246,6 +3251,7 @@ function pomoResumeNoise() { if (pomoCurNoise !== 'off') pomoStartNoise(pomoCurN
 
 function pomoSelectNoise(type) {
   pomoCurNoise = type;
+  localStorage.setItem('jhtt_pomo_noise', type);
   ['off','white','pink','brown'].forEach(n => {
     const b = document.getElementById('pnb-' + n);
     if (b) b.classList.toggle('active', n === type);
@@ -3256,6 +3262,7 @@ function pomoSelectNoise(type) {
 
 function pomoSetVol(v) {
   pomoVolVal = parseInt(v);
+  localStorage.setItem('jhtt_pomo_vol', pomoVolVal);
   const lbl = document.getElementById('pomo-vol-lbl');
   if (lbl) lbl.textContent = v;
   const typeGain = {white: 1.0, pink: 3.5, brown: 4.5};
@@ -3824,6 +3831,19 @@ function updatePomoNavBadge() {
 }
 
 function pomoInit() {
+  pomoRemaining = pomoCfg[pomoMode] * 60; pomoTotal = pomoRemaining;
+  ['focus','short','long','rounds'].forEach(k => {
+    const el = document.getElementById('pv-' + k);
+    if (el) el.value = pomoCfg[k];
+  });
+  ['off','white','pink','brown'].forEach(n => {
+    const b = document.getElementById('pnb-' + n);
+    if (b) b.classList.toggle('active', n === pomoCurNoise);
+  });
+  const volEl = document.getElementById('pomo-vol');
+  if (volEl) volEl.value = pomoVolVal;
+  const volLbl = document.getElementById('pomo-vol-lbl');
+  if (volLbl) volLbl.textContent = pomoVolVal;
   pomoUpdateDisplay(); pomoUpdateRing(); pomoUpdateModeBtns();
   pomoUpdateDots(); pomoRenderStats(); pomoRenderLog();
   pomoPopulateTaskSelect();
