@@ -3385,14 +3385,20 @@ function pomoRenderLog() {
         <div class="pomo-log-meta">${date} · ${time}${e.type === 'focus' && e.mins ? ' · ' + e.mins + 'min' : ''}</div>
         ${noteTag}
         <div id="plog-edit-${e.id}" style="display:none;margin-top:6px;display:none">
-          <div style="position:relative">
-            <input type="text" id="plog-input-${e.id}" value="${e.note || ''}" maxlength="80"
-              placeholder="Add a note…"
-              style="width:100%;padding:5px 70px 5px 9px;font-size:12px;border:1.5px solid var(--sage);border-radius:7px;font-family:'Lato',sans-serif;color:var(--text);outline:none;box-sizing:border-box"
+          <div style="display:flex;align-items:center;gap:6px">
+            <div style="position:relative;flex:0 1 80%;min-width:0">
+              <input type="text" id="plog-input-${e.id}" value="${e.note || ''}" maxlength="80"
+                placeholder="Add a note…"
+                style="width:100%;padding:5px 70px 5px 9px;font-size:12px;border:1.5px solid var(--sage);border-radius:7px;font-family:'Lato',sans-serif;color:var(--text);outline:none;box-sizing:border-box"
+                onkeydown="if(event.key==='Enter')pomoSaveNote(${e.id});if(event.key==='Escape')pomoCancelEdit(${e.id})">
+              <button type="button" data-lang="en" oncontextmenu="event.preventDefault();toggleTranslateLang(this)" onclick="inlineTranslate('plog-input-${e.id}', this)" title="Translate to English"
+                style="position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:11px;padding:2px 7px;border-radius:5px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;font-family:'Lato',sans-serif;transition:all .15s"
+                onmouseover="this.style.borderColor='var(--sage)';this.style.color='var(--sage2)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">🌐 EN</button>
+            </div>
+            <input type="number" id="plog-mins-${e.id}" value="${e.mins || ''}" min="1" max="999"
+              style="width:48px;padding:5px 6px;font-size:12px;border:1.5px solid var(--sage);border-radius:7px;font-family:'Lato',sans-serif;color:var(--text);outline:none;box-sizing:border-box;text-align:center;flex-shrink:0"
               onkeydown="if(event.key==='Enter')pomoSaveNote(${e.id});if(event.key==='Escape')pomoCancelEdit(${e.id})">
-            <button type="button" data-lang="en" oncontextmenu="event.preventDefault();toggleTranslateLang(this)" onclick="inlineTranslate('plog-input-${e.id}', this)" title="Translate to English"
-              style="position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:11px;padding:2px 7px;border-radius:5px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;font-family:'Lato',sans-serif;transition:all .15s"
-              onmouseover="this.style.borderColor='var(--sage)';this.style.color='var(--sage2)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">🌐 EN</button>
+            <span style="font-size:12px;color:var(--muted2);flex-shrink:0">min</span>
           </div>
           <div style="display:flex;gap:6px;margin-top:5px">
             <button onclick="pomoSaveNote(${e.id})" class="btn btn-primary" style="font-size:11px;padding:4px 10px">Save</button>
@@ -3427,15 +3433,20 @@ function pomoEditNote(id) {
 
 function pomoSaveNote(id) {
   const inp = document.getElementById(`plog-input-${id}`);
+  const minsInp = document.getElementById(`plog-mins-${id}`);
   if (!inp) return;
   const note = inp.value.trim();
   const entry = pomoLog.find(e => e.id === id);
   if (entry) {
     entry.note = note;
+    if (minsInp && minsInp.value) {
+      const newMins = Math.max(1, Math.round(Number(minsInp.value)));
+      if (!isNaN(newMins)) entry.mins = newMins;
+    }
     localStorage.setItem(POMO_LOG_KEY, JSON.stringify(pomoLog));
   }
-  pomoRenderLog();
-  showToast('Note saved');
+  pomoRenderLog(); pomoRenderStats();
+  showToast('Saved');
 }
 
 function pomoCancelEdit(id) {
