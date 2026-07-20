@@ -5473,6 +5473,14 @@ function dailyToggleTomorrow() {
   dailyRender();
 }
 
+function dailyPlanTomorrow() {
+  _dailyAddDate = 'tomorrow';
+  localStorage.setItem('daily_tomorrow_open', '1');
+  dailyRender();
+  const inp = document.getElementById('daily-add-input');
+  if (inp) inp.focus();
+}
+
 function dailyDropToTomorrow(e) {
   e.preventDefault();
   const tomorrow = dailyLocalDate(1);
@@ -6035,7 +6043,7 @@ function dailyRender() {
     html += `<div class="daily-group-header" ondragover="event.preventDefault();if(typeof _blockerDragId!=='undefined'&&_blockerDragId)event.dataTransfer.dropEffect='none'" ondrop="if(typeof _blockerDragId==='undefined'||!_blockerDragId)dailyDropToToday(event);else event.preventDefault()"><span class="daily-group-label" style="color:var(--sage2)">TODAY · ${todayItems.length}</span><div class="daily-group-line"></div></div>`;
     if (todayItems.length === 0) {
       if (doneItems.length > 0 && rollovers.length === 0) {
-        html += `<div style="text-align:center;padding:80px 0 28px;color:var(--muted2);font-size:13px" ondragover="event.preventDefault();if(typeof _blockerDragId!=='undefined'&&_blockerDragId)event.dataTransfer.dropEffect='none'" ondrop="if(typeof _blockerDragId==='undefined'||!_blockerDragId)dailyDropToToday(event);else event.preventDefault()"><div style="margin-bottom:6px;opacity:.4;color:var(--sage)"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5l10 -10"/></svg></div><div>All done for today — go rest up</div></div>`;
+        html += `<div style="text-align:center;padding:18px 0 14px;color:var(--muted2);font-size:13px" ondragover="event.preventDefault();if(typeof _blockerDragId!=='undefined'&&_blockerDragId)event.dataTransfer.dropEffect='none'" ondrop="if(typeof _blockerDragId==='undefined'||!_blockerDragId)dailyDropToToday(event);else event.preventDefault()"><span style="opacity:.5;color:var(--sage);vertical-align:middle;margin-right:4px">✓</span><span style="vertical-align:middle">All done for today — go rest up · <span onclick="dailyPlanTomorrow()" style="color:var(--sky);cursor:pointer;text-decoration:underline;text-underline-offset:2px">plan tomorrow →</span></span></div>`;
       } else {
         html += `<div style="text-align:center;padding:80px 0 28px;color:var(--muted2);font-size:13px" ondragover="event.preventDefault();if(typeof _blockerDragId!=='undefined'&&_blockerDragId)event.dataTransfer.dropEffect='none'" ondrop="if(typeof _blockerDragId==='undefined'||!_blockerDragId)dailyDropToToday(event);else event.preventDefault()"><div style="margin-bottom:6px;opacity:.4;color:var(--accent)"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"/><path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7"/></svg></div><div>Nothing planned yet — add something below</div></div>`;
       }
@@ -6048,7 +6056,7 @@ function dailyRender() {
     html += `<div class="daily-group-header" ondragover="event.preventDefault()" ondrop="dailyDropToTomorrow(event)" style="margin-top:8px;cursor:pointer;flex-shrink:0" onclick="dailyToggleTomorrow()"><span class="daily-group-label" style="color:var(--sky)">TOMORROW · ${tomorrowItems.length}</span><div class="daily-group-line"></div><span id="tomorrow-toggle-arrow" style="font-size:11px;color:var(--muted2);flex-shrink:0">${tmrwOpen ? '▴ hide' : '▾ show'}</span></div>`;
     if (tmrwOpen) {
       if (tomorrowItems.length > 0) {
-        html += `<div id="tomorrow-items-wrap" ondragover="event.preventDefault()" ondrop="dailyDropToTomorrow(event)" style="display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;padding-right:4px" class="scroll-hide">${tomorrowItems.map(i => renderItem(i, false)).join('')}</div>`;
+        html += `<div id="tomorrow-items-wrap" ondragover="event.preventDefault()" ondrop="dailyDropToTomorrow(event)" style="display:flex;flex-direction:column;gap:6px;max-height:440px;overflow-y:auto;padding-right:4px" class="scroll-hide">${tomorrowItems.map(i => renderItem(i, false)).join('')}</div>`;
       } else {
         html += `<div id="tomorrow-items-wrap" ondragover="event.preventDefault()" ondrop="dailyDropToTomorrow(event)" style="border:1px dashed var(--border2);border-radius:8px;padding:14px;text-align:center;font-size:11px;color:var(--muted2)">Drag items here to schedule for tomorrow</div>`;
       }
