@@ -5122,6 +5122,7 @@ function dtagStyle(taskId) {
 let _dailySideTab = 'backlog';
 const DAILY_KEY = 'jhtt_daily', BACKLOG_KEY = 'jhtt_backlog';
 let dailyItems = JSON.parse(localStorage.getItem(DAILY_KEY) || '[]') || [];
+let _dailyAddDate = 'today';
 // Purge only DONE items older than today; keep all undone (overdue) items
 (function() {
   if (!dailyItems.length) return;
@@ -5446,7 +5447,7 @@ function dailyAdd() {
   dailyItems.push({
     id: Date.now(),
     text,
-    date: dailyLocalDate(),
+    date: dailyLocalDate(_dailyAddDate === 'tomorrow' ? 1 : 0),
     taskId: task ? task.id : null,
     taskName: task ? task.name : null,
     done: false,
@@ -5455,6 +5456,59 @@ function dailyAdd() {
   dailySave();
   if (inp) inp.value = '';
   dailyRender();
+}
+
+function dailySetAddDate(mode) {
+  const inp = document.getElementById('daily-add-input');
+  const val = inp ? inp.value : '';
+  _dailyAddDate = mode;
+  dailyRender();
+  const inp2 = document.getElementById('daily-add-input');
+  if (inp2) { inp2.value = val; inp2.focus(); }
+}
+
+function dailyToggleTomorrow() {
+  const open = localStorage.getItem('daily_tomorrow_open') !== '0';
+  localStorage.setItem('daily_tomorrow_open', open ? '0' : '1');
+  dailyRender();
+}
+
+function dailyDropToTomorrow(e) {
+  e.preventDefault();
+  const tomorrow = dailyLocalDate(1);
+  // Handle backlog item dragged straight to tomorrow
+  if (_backlogDragId) {
+    const item = backlogItems.find(i => i.id === _backlogDragId);
+    if (item) {
+      backlogItems = backlogItems.filter(i => i.id !== _backlogDragId);
+      dailyItems.push({
+        id: Date.now(),
+        text: item.text,
+        date: tomorrow,
+        taskId: item.taskId || null,
+        taskName: item.taskName || null,
+        link: item.link || null,
+        estMins: item.estMins || null,
+        done: false,
+        ts: new Date().toISOString()
+      });
+      dailySave();
+      dailyRender();
+      showToast('Scheduled for tomorrow');
+    }
+    _backlogDragId = null;
+    return;
+  }
+  if (!_dailyDragId) return;
+  const item = dailyItems.find(i => i.id === _dailyDragId);
+  if (!item) { _dailyDragId = null; return; }
+  if (item.date !== tomorrow) {
+    item.date = tomorrow;
+    dailySave();
+    dailyRender();
+    showToast('Moved to tomorrow');
+  }
+  _dailyDragId = null;
 }
 
 function dailyMoveToToday(id) {
@@ -5978,7 +6032,7 @@ function dailyRender() {
       html += `<div style="display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto;padding-right:4px" class="scroll-hide">${rollovers.map(i => renderItem(i, true)).join('')}</div>`;
     }
     const doneItems = dailyItems.filter(i => i.date === today && i.done);
-    html += `<div class="daily-group-header" ondragover="event.preventDefault();if(typeof _blockerDragId!=='undefined'&&_blockerDragId)event.dataTransfer.dropEffect='none'" ondrop="if(typeof _blockerDragId==='undefined'||!_blockerDragId)dailyDropToToday(event);else event.preventDefault()"><span class="daily-group-label">TODAY · ${todayItems.length}</span><div class="daily-group-line"></div></div>`;
+    html += `<div class="daily-group-header" ondragover="event.preventDefault();if(typeof _blockerDragId!=='undefined'&&_blockerDragId)event.dataTransfer.dropEffect='none'" ondrop="if(typeof _blockerDragId==='undefined'||!_blockerDragId)dailyDropToToday(event);else event.preventDefault()"><span class="daily-group-label" style="color:var(--sage2)">TODAY · ${todayItems.length}</span><div class="daily-group-line"></div></div>`;
     if (todayItems.length === 0) {
       if (doneItems.length > 0 && rollovers.length === 0) {
         html += `<div style="text-align:center;padding:80px 0 28px;color:var(--muted2);font-size:13px" ondragover="event.preventDefault();if(typeof _blockerDragId!=='undefined'&&_blockerDragId)event.dataTransfer.dropEffect='none'" ondrop="if(typeof _blockerDragId==='undefined'||!_blockerDragId)dailyDropToToday(event);else event.preventDefault()"><div style="margin-bottom:6px;opacity:.4;color:var(--sage)"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5l10 -10"/></svg></div><div>All done for today — go rest up</div></div>`;
@@ -5988,6 +6042,17 @@ function dailyRender() {
     } else {
       html += `<div style="display:flex;flex-direction:column;gap:6px;max-height:500px;overflow-y:auto;padding-right:4px" class="scroll-hide">${todayItems.map(i => renderItem(i, false)).join('')}</div>`;
     }
+    const tomorrowDate = dailyLocalDate(1);
+    const tomorrowItems = dailyItems.filter(i => i.date === tomorrowDate && !i.done);
+    const tmrwOpen = localStorage.getItem('daily_tomorrow_open') !== '0';
+    html += `<div class="daily-group-header" ondragover="event.preventDefault()" ondrop="dailyDropToTomorrow(event)" style="margin-top:8px;cursor:pointer;flex-shrink:0" onclick="dailyToggleTomorrow()"><span class="daily-group-label" style="color:var(--sky)">TOMORROW · ${tomorrowItems.length}</span><div class="daily-group-line"></div><span id="tomorrow-toggle-arrow" style="font-size:11px;color:var(--muted2);flex-shrink:0">${tmrwOpen ? '▴ hide' : '▾ show'}</span></div>`;
+    if (tmrwOpen) {
+      if (tomorrowItems.length > 0) {
+        html += `<div id="tomorrow-items-wrap" ondragover="event.preventDefault()" ondrop="dailyDropToTomorrow(event)" style="display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;padding-right:4px" class="scroll-hide">${tomorrowItems.map(i => renderItem(i, false)).join('')}</div>`;
+      } else {
+        html += `<div id="tomorrow-items-wrap" ondragover="event.preventDefault()" ondrop="dailyDropToTomorrow(event)" style="border:1px dashed var(--border2);border-radius:8px;padding:14px;text-align:center;font-size:11px;color:var(--muted2)">Drag items here to schedule for tomorrow</div>`;
+      }
+    }
     const taskOptions = tasks.filter(t => t.status !== 'done').map(t => `<option value="${t.id}">${t.name.length > 35 ? t.name.slice(0,35)+'…' : t.name}</option>`).join('');
     html += `<div style="flex:1"></div>`;
     if (doneItems.length > 0) {
@@ -5996,8 +6061,12 @@ function dailyRender() {
       html += `<div id="done-items-wrap" style="display:${doneOpen ? 'flex' : 'none'};flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;padding-right:4px" class="scroll-hide">${doneItems.map(i => renderItem(i, false)).join('')}</div>`;
     }
     html += `<div class="daily-add-row">
+      <div style="display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;flex-shrink:0">
+        <button type="button" onclick="dailySetAddDate('today')" title="Add for today" style="padding:0 10px;height:36px;font-size:12px;border:none;cursor:pointer;font-family:'Lato',sans-serif;white-space:nowrap;background:${_dailyAddDate==='today'?'var(--sage)':'var(--surface)'};color:${_dailyAddDate==='today'?'#fff':'var(--muted)'}">Today</button>
+        <button type="button" onclick="dailySetAddDate('tomorrow')" title="Add for tomorrow" style="padding:0 10px;height:36px;font-size:12px;border:none;cursor:pointer;font-family:'Lato',sans-serif;white-space:nowrap;background:${_dailyAddDate==='tomorrow'?'var(--sky)':'var(--surface)'};color:${_dailyAddDate==='tomorrow'?'#fff':'var(--muted)'}">Tmrw</button>
+      </div>
       <div style="position:relative;flex:1">
-        <input class="daily-add-input" id="daily-add-input" placeholder="Add a task for today…" onkeydown="if(event.key==='Enter')dailyAdd()" style="width:100%;box-sizing:border-box;padding-right:56px">
+        <input class="daily-add-input" id="daily-add-input" placeholder="${_dailyAddDate==='tomorrow' ? 'Add a task for tomorrow…' : 'Add a task for today…'}" onkeydown="if(event.key==='Enter')dailyAdd()" style="width:100%;box-sizing:border-box;padding-right:56px">
         <button type="button" data-lang="en" oncontextmenu="event.preventDefault();toggleTranslateLang(this)" onclick="inlineTranslate('daily-add-input',this)" title="Translate to English" style="position:absolute;right:7px;top:50%;transform:translateY(-50%);font-size:11px;padding:3px 7px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;font-family:'Lato',sans-serif;transition:all .15s" onmouseover="this.style.borderColor='var(--sage)';this.style.color='var(--sage2)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">🌐 EN</button>
       </div>
       <select class="daily-task-select" id="daily-task-select">
