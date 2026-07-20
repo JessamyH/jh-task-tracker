@@ -5187,26 +5187,28 @@ function routinesSaveStore() { localStorage.setItem(ROUTINE_KEY, JSON.stringify(
 
 function routineGenerate() {
   if (!routines.length) return;
-  const today = dailyLocalDate();
-  const dow = new Date().getDay();
   let changed = false;
-  routines.forEach(r => {
-    if (!Array.isArray(r.days) || !r.days.includes(dow)) return;
-    if (r.lastGenDate === today) return;
-    dailyItems.push({
-      id: Date.now() + Math.random(),
-      text: r.text,
-      date: today,
-      taskId: r.taskId || null,
-      taskName: r.taskName || null,
-      link: r.link || null,
-      estMins: r.estMins || null,
-      done: false,
-      ts: new Date().toISOString(),
-      routineId: r.id
+  [0, 1].forEach(offset => {
+    const date = dailyLocalDate(offset);
+    const dow = (new Date().getDay() + offset) % 7;
+    routines.forEach(r => {
+      if (!Array.isArray(r.days) || !r.days.includes(dow)) return;
+      if (r.lastGenDate && r.lastGenDate >= date) return;
+      dailyItems.push({
+        id: Date.now() + Math.random(),
+        text: r.text,
+        date,
+        taskId: r.taskId || null,
+        taskName: r.taskName || null,
+        link: r.link || null,
+        estMins: r.estMins || null,
+        done: false,
+        ts: new Date().toISOString(),
+        routineId: r.id
+      });
+      r.lastGenDate = date;
+      changed = true;
     });
-    r.lastGenDate = today;
-    changed = true;
   });
   if (changed) { dailySave(); routinesSaveStore(); }
 }
