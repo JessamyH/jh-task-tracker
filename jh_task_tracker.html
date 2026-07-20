@@ -6052,8 +6052,10 @@ function dailyRender() {
     }
     const tomorrowDate = dailyLocalDate(1);
     const tomorrowItems = dailyItems.filter(i => i.date === tomorrowDate && !i.done);
+    const tomorrowEstTotal = tomorrowItems.reduce((s, i) => s + (i.estMins || 0), 0);
+    const tomorrowEstLabel = tomorrowEstTotal ? (tomorrowEstTotal < 60 ? tomorrowEstTotal + 'm' : Math.floor(tomorrowEstTotal/60) + 'h' + (tomorrowEstTotal%60 ? ' ' + (tomorrowEstTotal%60) + 'm' : '')) : '';
     const tmrwOpen = localStorage.getItem('daily_tomorrow_open') !== '0';
-    html += `<div class="daily-group-header" ondragover="event.preventDefault()" ondrop="dailyDropToTomorrow(event)" style="margin-top:8px;cursor:pointer;flex-shrink:0" onclick="dailyToggleTomorrow()"><span class="daily-group-label" style="color:var(--sky)">TOMORROW · ${tomorrowItems.length}</span><div class="daily-group-line"></div><span id="tomorrow-toggle-arrow" style="font-size:11px;color:var(--muted2);flex-shrink:0">${tmrwOpen ? '▴ hide' : '▾ show'}</span></div>`;
+    html += `<div class="daily-group-header" ondragover="event.preventDefault()" ondrop="dailyDropToTomorrow(event)" style="margin-top:8px;cursor:pointer;flex-shrink:0" onclick="dailyToggleTomorrow()"><span class="daily-group-label" style="color:var(--sky)">TOMORROW · ${tomorrowItems.length}</span><div class="daily-group-line"></div>${tomorrowEstLabel ? `<span style="font-size:11px;color:var(--sky);flex-shrink:0">${tomorrowEstLabel}</span>` : ''}<span id="tomorrow-toggle-arrow" style="font-size:11px;color:var(--muted2);flex-shrink:0">${tmrwOpen ? '▴ hide' : '▾ show'}</span></div>`;
     if (tmrwOpen) {
       if (tomorrowItems.length > 0) {
         html += `<div id="tomorrow-items-wrap" ondragover="event.preventDefault()" ondrop="dailyDropToTomorrow(event)" style="display:flex;flex-direction:column;gap:6px;max-height:440px;overflow-y:auto;padding-right:4px" class="scroll-hide">${tomorrowItems.map(i => renderItem(i, false)).join('')}</div>`;
