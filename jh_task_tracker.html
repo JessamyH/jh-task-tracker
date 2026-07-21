@@ -1412,6 +1412,12 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
         <div id="me-note-chips" style="display:none;position:absolute;top:4px;left:0;right:0;background:var(--bg);border:1px solid var(--border);border-radius:10px;overflow:hidden;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,.12)"></div>
       </div>
     </div>
+    <div class="form-group" id="me-done-row" style="display:none">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text)">
+        <input type="checkbox" id="me-mark-done" style="width:15px;height:15px;accent-color:var(--sage);cursor:pointer">
+        Mark this task as done
+      </label>
+    </div>
     <div class="modal-actions">
       <button class="btn" onclick="closeManualEntry()">Cancel</button>
       <button class="btn btn-primary" onclick="saveManualEntry()">Save</button>
@@ -3938,26 +3944,61 @@ function pomoInit() {
 }
 
 // ── Manual Entry
-function openManualEntry() {
+let _meDailyItemId = null;
+// prefill (optional): { taskId, note, mins, date, itemId } — used when jumping in from
+// the Daily List so the task, estimate, and text carry over instead of a blank form.
+// itemId links back to the originating daily item so "mark as done" can update it.
+function openManualEntry(prefill) {
   const today = new Date().toISOString().split('T')[0];
   const nowTime = new Date().toTimeString().slice(0,5);
-  document.getElementById('me-date').value = today;
+  document.getElementById('me-date').value = (prefill && prefill.date) || today;
   document.getElementById('me-time').value = nowTime;
-  document.getElementById('me-mins').value = 60;
-  document.getElementById('me-note').value = '';
+  document.getElementById('me-mins').value = (prefill && prefill.mins) || 60;
+  document.getElementById('me-note').value = (prefill && prefill.note) || '';
   // populate task select
   const sel = document.getElementById('me-task');
-  const cur = sel.value;
+  const cur = prefill ? (prefill.taskId != null ? String(prefill.taskId) : '') : sel.value;
   sel.innerHTML = '<option value="">— None (logged as Others) —</option>' +
     tasks.map(t => `<option value="${t.id}"${String(t.id)===cur?' selected':''}>${t.name}</option>`).join('');
   sel.onchange = meRenderNoteChips;
   meRenderNoteChips();
+  _meDailyItemId = (prefill && prefill.itemId) || null;
+  const doneRow = document.getElementById('me-done-row');
+  const doneChk = document.getElementById('me-mark-done');
+  if (_meDailyItemId != null) {
+    const srcItem = dailyItems.find(i => i.id === _meDailyItemId);
+    doneRow.style.display = 'block';
+    doneChk.checked = !(srcItem && srcItem.done);
+  } else {
+    doneRow.style.display = 'none';
+    doneChk.checked = false;
+  }
   document.getElementById('manual-entry-modal').classList.add('open');
+  if (prefill && prefill.mins) {
+    const minsEl = document.getElementById('me-mins');
+    setTimeout(() => { minsEl.focus(); minsEl.select(); }, 50);
+  }
+}
+
+// Jump from a Daily List item straight into Manual Entry, pre-filled with
+// that item's linked project, text, and estimated time as the duration.
+function dailyLogTime(id) {
+  const item = dailyItems.find(i => i.id === id);
+  if (!item) return;
+  const today = dailyLocalDate();
+  openManualEntry({
+    taskId: item.taskId || null,
+    note: item.text,
+    mins: item.estMins || 60,
+    date: item.date <= today ? item.date : today,
+    itemId: item.id
+  });
 }
 
 function closeManualEntry() {
   document.getElementById('manual-entry-modal').classList.remove('open');
   meCloseChips();
+  _meDailyItemId = null;
 }
 
 function meRenderNoteChips() {
@@ -4047,6 +4088,15 @@ function saveManualEntry() {
   pomoLog.unshift(entry);
 
   localStorage.setItem(POMO_LOG_KEY, JSON.stringify(pomoLog));
+
+  if (_meDailyItemId != null) {
+    const doneChk = document.getElementById('me-mark-done');
+    if (doneChk && doneChk.checked) {
+      const srcItem = dailyItems.find(i => i.id === _meDailyItemId);
+      if (srcItem && !srcItem.done) { srcItem.done = true; dailySave(); dailyRender(); }
+    }
+  }
+
   pomoRenderLog(); pomoRenderStats(); updatePomoNavBadge();
   closeManualEntry();
   showToast('✅ Hours logged');
@@ -6008,6 +6058,7 @@ function dailyRender() {
       : `<span class="daily-item-tag none">Others</span>`;
     const starHtml = `<button class="daily-item-star${item.starred?' starred':''}" onclick="event.stopPropagation();dailyStar(${item.id})" title="${item.starred?'Unstar':'Star'}">${item.starred?'★':'☆'}</button>`;
     const pomoHtml = `<button class="daily-item-pomo-btn" onclick="event.stopPropagation();goToPomodoro(${item.taskId||'null'},'${(item.taskName||'').replace(/'/g,"\\'")}','${item.text.replace(/'/g,"\\'")}',${item.estMins||'null'});" title="Start Pomodoro for this task">🍅</button>`;
+    const logHtml = `<button class="daily-item-pomo-btn" onclick="event.stopPropagation();dailyLogTime(${item.id})" title="Log time manually${item.estMins?' ('+estFmt(item.estMins)+')':''}">📝</button>`;
     const estHtml = `<button class="daily-item-est${item.estMins?' set':''}" onclick="event.stopPropagation();dailyEditEst(${item.id})" title="Estimated time">${item.estMins?estFmt(item.estMins):'<span class="daily-item-est-icon">⏱</span>'}</button>`;
     const linkHtml = item.link
       ? `<a href="${item.link}" target="_blank" rel="noopener" class="daily-item-link-btn has-link" onclick="event.stopPropagation()" title="${item.link}">🔗</a>`
@@ -6015,7 +6066,7 @@ function dailyRender() {
     return `<div class="daily-item${isRollover?' rollover':''}${item.done?' done':''}${item.starred?' starred-item':''}" id="ditem-${item.id}" draggable="true" ondragstart="dailyDragStart(event,${item.id})" ondragover="dailyDragOver(event,${item.id})" ondragleave="dailyDragLeave(event)" ondrop="dailyDrop(event,${item.id})" ondragend="dailyDragEnd(event)">
       <div class="daily-check${item.done?' checked':''}" onclick="dailyToggle(${item.id})"></div>
       <div style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0">
-        <span class="daily-item-text" ondblclick="dailyInlineEdit(${item.id})" title="Double-click to edit">${item.text} ${pomoHtml} ${starHtml} ${linkHtml}</span>
+        <span class="daily-item-text" ondblclick="dailyInlineEdit(${item.id})" title="Double-click to edit">${item.text} ${pomoHtml} ${logHtml} ${starHtml} ${linkHtml}</span>
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
         ${estHtml}
