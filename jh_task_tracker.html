@@ -1248,7 +1248,7 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
 
             <div class="pomo-dots" id="pomo-dots"></div>
             <div class="pomo-status" id="pomo-status">Ready</div>
-            <button onclick="openPomoSettings()" title="Timer Settings" style="position:absolute;bottom:14px;right:14px;width:28px;height:28px;border-radius:50%;border:1px solid var(--border2);background:transparent;color:var(--muted);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;" onmouseover="this.style.borderColor='var(--sage)';this.style.color='var(--sage2)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--muted)'">⚙</button>
+            <button id="pomo-settings-btn" onclick="openPomoSettings()" title="Timer Settings" style="position:absolute;bottom:14px;right:14px;width:28px;height:28px;border-radius:50%;border:1px solid var(--border2);background:transparent;color:var(--muted);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;" onmouseover="this.style.borderColor='var(--sage)';this.style.color='var(--sage2)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--muted)'">⚙</button>
           </div>
           <!-- Task link card -->
           <div class="pomo-card">
@@ -1962,7 +1962,7 @@ function setView(v, btn) {
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
   if (v === 'kanban') { kanbanFilter = 'all'; setProjView(projView); const ct=document.getElementById('proj-total-count'); if(ct) ct.textContent=tasks.length+' project'+(tasks.length!==1?'s':''); }
-  if (v === 'pomodoro') { pomoLinkedDailyItemId = null; pomoPopulateTaskSelect(); pomoRenderNoteChips(); pomoRenderLog(); pomoRenderStats(); pomoInitCountUpBtns(); requestAnimationFrame(syncPomoHeight); }
+  if (v === 'pomodoro') { pomoLinkedDailyItemId = null; pomoPopulateTaskSelect(); pomoRenderNoteChips(); pomoRenderLog(); pomoRenderStats(); pomoInitCountUpBtns(); pomoUpdateSettingsBtnState(); requestAnimationFrame(syncPomoHeight); }
   if (v === 'weekly') { wrRender(); }
   if (v === 'daily') { backlogAutoSchedule(); routineGenerate(); dailyRender(); }
 }
@@ -2943,6 +2943,10 @@ function wrCopyReport() {
 }
 
 function openPomoSettings() {
+  if (pomoSessionStartTime) {
+    showToast('⏸ Finish (Done) or reset the current session to change settings');
+    return;
+  }
   ['focus','short','long','rounds'].forEach(k => {
     const el = document.getElementById('pv-' + k);
     if (el) el.value = pomoCfg[k];
@@ -2951,6 +2955,17 @@ function openPomoSettings() {
 }
 function closePomoSettings() {
   document.getElementById('pomo-settings-modal').classList.remove('open');
+}
+// Keeps the settings gear visually locked for the whole life of a session — from the moment
+// it starts until Done/Reset/Skip — including while paused. Prevents the countdown duration
+// from being changed mid-session, which was causing sessions to log the wrong elapsed time.
+function pomoUpdateSettingsBtnState() {
+  const btn = document.getElementById('pomo-settings-btn');
+  if (!btn) return;
+  const locked = !!pomoSessionStartTime;
+  btn.style.opacity = locked ? '.35' : '';
+  btn.style.cursor = locked ? 'not-allowed' : 'pointer';
+  btn.title = locked ? 'Finish (Done) or reset the current session to change settings' : 'Timer Settings';
 }
 
 // ── Pomodoro Timer
@@ -3052,6 +3067,8 @@ function pomoSetMode(m, autoStart=false) {
   pomoRemaining = mins[m] * 60;
   pomoTotal = pomoRemaining;
   pomoOvertime = false; pomoOvertimeSec = 0;
+  pomoSessionStartTime = null;
+  pomoUpdateSettingsBtnState();
   if (pomoRunning) { clearInterval(pomoTicker); pomoRunning = false; }
   pomoUpdateDisplay(); pomoUpdateRing(); pomoUpdateModeBtns();
   if (m === 'focus') pomoUpdateDots(); // only update dots when returning to focus
@@ -3080,6 +3097,7 @@ function pomoToggle() {
   } else {
     if (pomoRemaining <= 0) pomoRemaining = pomoTotal;
     if (pomoMode === 'focus' && pomoRemaining === pomoTotal) pomoSessionStartTime = new Date();
+    pomoUpdateSettingsBtnState();
     pomoRunning = true;
     const pb = document.getElementById('pomo-playbtn');
     if (pb) pb.textContent = '⏸';
@@ -3186,6 +3204,8 @@ function pomoDoneEarly() {
   pomoOvertime = false; pomoOvertimeSec = 0;
   pomoUpdateDisplay(); pomoUpdateRing();
   pomoFinishFocusSession(elapsedSec, wasOvertime);
+  pomoSessionStartTime = null;
+  pomoUpdateSettingsBtnState();
 }
 
 let _pomoResetCount = 0;
@@ -3195,6 +3215,8 @@ function pomoReset() {
   clearInterval(pomoTicker); pomoRunning = false;
   pomoRemaining = pomoTotal;
   pomoOvertime = false; pomoOvertimeSec = 0;
+  pomoSessionStartTime = null;
+  pomoUpdateSettingsBtnState();
   pomoUpdateDisplay(); pomoUpdateRing();
   const pb = document.getElementById('pomo-playbtn');
   if (pb) pb.textContent = '▶';
@@ -3228,6 +3250,7 @@ function pomoSkip() {
   const db = document.getElementById('pomo-done-btn');
   if (db) db.style.display = 'none';
   pomoSessionStartTime = null;
+  pomoUpdateSettingsBtnState();
   if (pomoMode === 'focus') {
     pomoSession++;
     pomoUpdateDots();
