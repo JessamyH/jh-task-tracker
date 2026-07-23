@@ -380,6 +380,14 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
 .empty-sm{padding:32px 20px}
 .toast{position:fixed;bottom:24px;right:24px;background:var(--sage3);color:#d8ecd8;border-radius:10px;padding:11px 18px;font-size:13px;font-weight:700;z-index:999;transform:translateY(16px);opacity:0;transition:all .25s ease;pointer-events:none;box-shadow:0 6px 20px rgba(10,28,18,.2)}
 .toast.show{transform:translateY(0);opacity:1}
+.tick-confirm{position:fixed;bottom:24px;right:24px;background:var(--sage3);color:#fff;border-radius:10px;padding:12px 14px 12px 18px;font-size:13px;font-weight:700;z-index:1000;display:none;align-items:center;gap:12px;max-width:340px;transform:translateY(16px);opacity:0;transition:all .25s ease;pointer-events:none;box-shadow:0 6px 20px rgba(10,28,18,.25)}
+.tick-confirm.show{transform:translateY(0);opacity:1;pointer-events:auto}
+.tick-confirm-text{flex:1;line-height:1.4}
+.tick-confirm-actions{display:flex;gap:6px;flex-shrink:0}
+.tick-confirm-btn{border:none;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:700;font-family:'Lato',sans-serif;cursor:pointer;transition:opacity .15s}
+.tick-confirm-btn.yes{background:#fff;color:var(--sage3)}
+.tick-confirm-btn.no{background:rgba(255,255,255,.15);color:#fff}
+.tick-confirm-btn:hover{opacity:.85}
 
 /* ── Project Detail Panel ── */
 .proj-detail-overlay{position:fixed;inset:0;z-index:190;pointer-events:none}
@@ -1248,7 +1256,7 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
               Link to Project
             </div>
             <div class="pomo-task-link">
-              <select class="pomo-task-select" id="pomo-task-sel" onchange="pomoRenderNoteChips()">
+              <select class="pomo-task-select" id="pomo-task-sel" onchange="pomoTaskSelChanged()">
                 <option value="">Link to project (optional)</option>
               </select>
             </div>
@@ -1488,6 +1496,13 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
 </div>
 
 <div class="toast" id="toast"></div>
+<div class="tick-confirm" id="tick-confirm">
+  <span class="tick-confirm-text" id="tick-confirm-text"></span>
+  <span class="tick-confirm-actions">
+    <button class="tick-confirm-btn yes" onclick="tickConfirmYes()">✓ Tick off</button>
+    <button class="tick-confirm-btn no" onclick="tickConfirmNo()">Not now</button>
+  </span>
+</div>
 
 <script>
 const TASKS_KEY = 'jhtt_tasks';
@@ -1503,6 +1518,43 @@ function showToast(m) {
   const t = document.getElementById('toast');
   t.textContent = m; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+// ── Tick-off confirmation (offered after a Pomodoro session linked to a Daily item finishes)
+let _tickConfirmTimer = null;
+let _tickConfirmItemId = null;
+function showTickConfirm(itemId, text) {
+  const el = document.getElementById('tick-confirm');
+  const txt = document.getElementById('tick-confirm-text');
+  if (!el || !txt) return;
+  _tickConfirmItemId = itemId;
+  txt.textContent = `Tick off "${text && text.length > 60 ? text.slice(0,60)+'…' : text}" in Daily List?`;
+  el.style.display = 'flex';
+  requestAnimationFrame(() => el.classList.add('show'));
+  clearTimeout(_tickConfirmTimer);
+  _tickConfirmTimer = setTimeout(hideTickConfirm, 10000);
+}
+function hideTickConfirm() {
+  const el = document.getElementById('tick-confirm');
+  if (!el) return;
+  el.classList.remove('show');
+  clearTimeout(_tickConfirmTimer);
+  setTimeout(() => { if (!el.classList.contains('show')) el.style.display = 'none'; }, 250);
+}
+function tickConfirmYes() {
+  const id = _tickConfirmItemId;
+  hideTickConfirm();
+  if (id == null) return;
+  const item = dailyItems.find(i => i.id === id);
+  if (item && !item.done) {
+    item.done = true;
+    dailySave();
+    dailyRender();
+    showToast('✓ Ticked off in Daily List');
+  }
+}
+function tickConfirmNo() {
+  hideTickConfirm();
 }
 // iOS Safari fix: "YYYY-MM-DD" parses as Invalid Date; use "YYYY/MM/DD" instead
 function parseDate(d) {
@@ -1910,16 +1962,20 @@ function setView(v, btn) {
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
   if (v === 'kanban') { kanbanFilter = 'all'; setProjView(projView); const ct=document.getElementById('proj-total-count'); if(ct) ct.textContent=tasks.length+' project'+(tasks.length!==1?'s':''); }
-  if (v === 'pomodoro') { pomoPopulateTaskSelect(); pomoRenderNoteChips(); pomoRenderLog(); pomoRenderStats(); pomoInitCountUpBtns(); requestAnimationFrame(syncPomoHeight); }
+  if (v === 'pomodoro') { pomoLinkedDailyItemId = null; pomoPopulateTaskSelect(); pomoRenderNoteChips(); pomoRenderLog(); pomoRenderStats(); pomoInitCountUpBtns(); requestAnimationFrame(syncPomoHeight); }
   if (v === 'weekly') { wrRender(); }
   if (v === 'daily') { backlogAutoSchedule(); routineGenerate(); dailyRender(); }
 }
 
 // ── Launch Pomodoro from Daily item
-function goToPomodoro(taskId, taskName, itemText, estMins) {
+let pomoLinkedDailyItemId = null;
+
+function goToPomodoro(taskId, taskName, itemText, estMins, dailyItemId) {
   // Switch to pomodoro view
   const navBtn = document.getElementById('nav-pomodoro');
   setView('pomodoro', navBtn);
+  // Remember which Daily List item this session is for, so we can offer to tick it off on completion
+  pomoLinkedDailyItemId = dailyItemId || null;
   // Set the task selector
   const sel = document.getElementById('pomo-task-sel');
   if (sel) {
@@ -1944,6 +2000,12 @@ function goToPomodoro(taskId, taskName, itemText, estMins) {
   } else {
     showToast('🍅 Pomodoro ready — press ▶ to start');
   }
+}
+
+function pomoTaskSelChanged() {
+  // Manually switching the task means this session is no longer tied to the Daily item that launched it
+  pomoLinkedDailyItemId = null;
+  pomoRenderNoteChips();
 }
 
 function dailyStar(id) {
@@ -3089,6 +3151,13 @@ function pomoFinishFocusSession(elapsedSec, wasOvertime) {
       if (noteEl2) { noteEl2.focus(); noteEl2.style.borderColor = 'var(--sage)'; }
       showToast('💡 Add a note to this session?');
     }, 900);
+  }
+  // Offer to tick off the Daily List item this session was for, if it isn't done yet
+  if (pomoLinkedDailyItemId) {
+    const linkedItem = dailyItems.find(i => i.id === pomoLinkedDailyItemId);
+    if (linkedItem && !linkedItem.done) {
+      setTimeout(() => showTickConfirm(linkedItem.id, linkedItem.text), 1300);
+    }
   }
   if (pomoSession % pomoCfg.rounds === 0) {
     // Flash all dots green before resetting
@@ -6057,7 +6126,7 @@ function dailyRender() {
       ? `<span class="daily-item-tag" style="${_tagStyle}" title="${item.taskName}">${item.taskName.length > 22 ? item.taskName.slice(0,22)+'…' : item.taskName}</span>`
       : `<span class="daily-item-tag none">Others</span>`;
     const starHtml = `<button class="daily-item-star${item.starred?' starred':''}" onclick="event.stopPropagation();dailyStar(${item.id})" title="${item.starred?'Unstar':'Star'}">${item.starred?'★':'☆'}</button>`;
-    const pomoHtml = `<button class="daily-item-pomo-btn" onclick="event.stopPropagation();goToPomodoro(${item.taskId||'null'},'${(item.taskName||'').replace(/'/g,"\\'")}','${item.text.replace(/'/g,"\\'")}',${item.estMins||'null'});" title="Start Pomodoro for this task">🍅</button>`;
+    const pomoHtml = `<button class="daily-item-pomo-btn" onclick="event.stopPropagation();goToPomodoro(${item.taskId||'null'},'${(item.taskName||'').replace(/'/g,"\\'")}','${item.text.replace(/'/g,"\\'")}',${item.estMins||'null'},${item.id});" title="Start Pomodoro for this task">🍅</button>`;
     const logHtml = `<button class="daily-item-pomo-btn" onclick="event.stopPropagation();dailyLogTime(${item.id})" title="Log time manually${item.estMins?' ('+estFmt(item.estMins)+')':''}">📝</button>`;
     const estHtml = `<button class="daily-item-est${item.estMins?' set':''}" onclick="event.stopPropagation();dailyEditEst(${item.id})" title="Estimated time">${item.estMins?estFmt(item.estMins):'<span class="daily-item-est-icon">⏱</span>'}</button>`;
     const linkHtml = item.link
