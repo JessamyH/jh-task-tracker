@@ -3146,6 +3146,7 @@ function pomoRestoreState() {
     if (pb) pb.textContent = '▶';
     if (breakFinishedWhileAway) {
       pomoSetStatus('Break over — back to focus!');
+      pomoPlayBreakOverChime();
       setTimeout(() => pomoSetMode('focus'), 800);
     } else if (pomoSessionStartTime) {
       pomoSetStatus('Paused');
@@ -3311,6 +3312,7 @@ function pomoTick() {
 function pomoOnSessionEnd() {
   if (pomoMode === 'long') pomoSession = 0;
   pomoSetStatus('Break over — back to focus!');
+  pomoPlayBreakOverChime();
   setTimeout(() => pomoSetMode('focus'), 800);
 }
 
@@ -3597,6 +3599,29 @@ function pomoPlayEstimateChime() {
       gain.gain.linearRampToValueAtTime(0.14, t + 0.06);
       gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
       osc.start(t); osc.stop(t + 0.5);
+    });
+  } catch(e) {}
+}
+
+// Marks the end of a rest period. Deliberately distinct from both the session
+// celebration (ascending 4-note) and the estimate-reached chime (soft, unresolved) —
+// this one is a short, clear "time's up, back to focus" cue.
+function pomoPlayBreakOverChime() {
+  try {
+    const ctx = pomoGetActx();
+    if (ctx.state === 'suspended') ctx.resume();
+    const notes = [659, 523]; // E5 C5 — descending
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const t = ctx.currentTime + i * 0.16;
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.2, t + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+      osc.start(t); osc.stop(t + 0.4);
     });
   } catch(e) {}
 }
