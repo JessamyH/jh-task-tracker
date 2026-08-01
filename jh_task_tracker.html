@@ -368,6 +368,17 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
 .form-label{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;display:block;margin-bottom:5px}
 .form-input,.form-select,.form-textarea{width:100%;padding:9px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-size:13px;font-family:'Lato',sans-serif;transition:border-color .15s;outline:none}
 .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--sage);background:#fff}
+.tag-input-wrap{display:flex;flex-wrap:wrap;gap:5px;align-items:center;border:1.5px solid var(--border);border-radius:9px;padding:6px 10px;background:var(--surface2);cursor:text;transition:border-color .15s}
+.tag-input-wrap:focus-within{border-color:var(--sage);background:#fff}
+.tag-input{border:none;outline:none;flex:1;min-width:90px;font-size:13px;font-family:'Lato',sans-serif;color:var(--text);background:transparent;padding:2px 0}
+.tag-chip{display:inline-flex;align-items:center;gap:5px;background:rgba(90,138,106,.12);color:var(--sage2);border-radius:999px;padding:2px 9px;font-size:11px;font-weight:600;line-height:1.6}
+.tag-chip-x{cursor:pointer;color:var(--muted);font-weight:400;font-size:12px}
+.tag-chip-x:hover{color:var(--rose)}
+.kcard-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:7px}
+.kcard-tag{font-size:9.5px;padding:1px 7px;border-radius:999px;background:var(--surface3);color:var(--muted);font-weight:600;letter-spacing:.02em}
+.wr-seg{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;flex-shrink:0}
+.wr-seg-btn{border:none;background:var(--surface2);color:var(--muted);font-size:10px;padding:3px 10px;cursor:pointer;font-family:'Lato',sans-serif;font-weight:600;letter-spacing:.03em;transition:all .15s}
+.wr-seg-btn.active{background:var(--sage);color:#fff}
 .form-select option{background:#fff}
 .form-textarea{min-height:72px;resize:vertical}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -783,7 +794,13 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
             <div class="wr-hm-labels" id="wr-hm-labels"></div>
           </div>
           <div class="wr-card" style="height:260px;display:flex;flex-direction:column;box-sizing:border-box">
-            <div class="wr-card-title" style="flex-shrink:0">Focus by Project</div>
+            <div class="wr-card-title" style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:8px">
+              <span id="wr-focus-title">Focus by Project</span>
+              <div class="wr-seg">
+                <button class="wr-seg-btn active" id="wr-seg-project" onclick="wrSetFocusMode('project')">Project</button>
+                <button class="wr-seg-btn" id="wr-seg-tag" onclick="wrSetFocusMode('tag')">Tag</button>
+              </div>
+            </div>
             <div id="wr-focus-bars" style="overflow-y:auto;flex:1"></div>
           </div>
         </div>
@@ -1344,6 +1361,13 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
         <select class="form-select" id="f-status"><option value="pending">Todo</option><option value="in-progress">In Progress</option><option value="in-review">In Review</option><option value="done">Done</option></select>
       </div>
     </div>
+    <div class="form-group"><label class="form-label">Tags</label>
+      <div class="tag-input-wrap" onclick="document.getElementById('f-tags-input').focus()">
+        <span id="f-tags-chips" style="display:contents"></span>
+        <input class="tag-input" id="f-tags-input" placeholder="Add tag, press Enter" list="tag-suggestions" onkeydown="tagInputKeydown(event,'modal')" onblur="tagInputCommit('modal')">
+      </div>
+    </div>
+    <datalist id="tag-suggestions"></datalist>
     <div class="form-group"><label class="form-label">Notes</label><div style="position:relative"><textarea class="form-textarea" id="f-notes" placeholder="Any details..." style="padding-right:70px;padding-bottom:32px"></textarea><button type="button" title="Translate to English" data-lang="en" oncontextmenu="event.preventDefault();toggleTranslateLang(this)" onclick="inlineTranslate('f-notes', this)" style="position:absolute;right:8px;bottom:8px;font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;white-space:nowrap;transition:all .15s;font-family:'Lato',sans-serif" onmouseover="this.style.borderColor='var(--sage)';this.style.color='var(--sage2)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">🌐 EN</button></div></div>
     <div class="modal-actions" style="justify-content:flex-end">
       <button class="btn" id="task-delete-action" style="display:none;border-color:rgba(138,90,90,.3);color:var(--rose);background:rgba(138,90,90,.06)" onclick="deleteTaskFromModal()">✕ Delete</button>
@@ -1692,6 +1716,7 @@ function renderKanban() {
           <div class="kcard-name" style="margin-bottom:0">${t.name}</div>
           ${actualStr ? `<span style="font-size:10px;font-family:'DM Mono',monospace;color:var(--muted2);white-space:nowrap;flex-shrink:0">${actualStr}</span>` : ''}
         </div>
+        ${(t.tags && t.tags.length) ? `<div class="kcard-tags">${t.tags.map(tg => `<span class="kcard-tag">${escHtml(tg)}</span>`).join('')}</div>` : ''}
         <div class="kcard-meta" style="justify-content:space-between">
           <span>${t.due ? `<span class="kcard-due${od?' overdue':dueSoon?' due-soon':''}">due ${fmt(t.due)}</span>` : ''}</span>
           ${priorityBadge(t.priority)}
@@ -2041,6 +2066,70 @@ function quickDone(id) {
 }
 
 // ── Task modal
+// ── Project Tags ──────────────────────────────────────────────────────────
+let _modalTags = [];
+
+function allTags() {
+  const s = new Set();
+  tasks.forEach(t => (t.tags || []).forEach(tg => s.add(tg)));
+  return [...s].sort((a, b) => a.localeCompare(b));
+}
+
+function updateTagDatalist() {
+  const dl = document.getElementById('tag-suggestions');
+  if (dl) dl.innerHTML = allTags().map(tg => `<option value="${escHtml(tg)}">`).join('');
+}
+
+function tagInputKeydown(e, ctx) {
+  const input = e.target;
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+    tagInputCommit(ctx);
+  } else if (e.key === 'Backspace' && input.value === '') {
+    if (ctx === 'modal') { _modalTags.pop(); renderModalTags(); }
+    else { const t = tasks.find(x => x.id === _pdpTaskId); if (t && t.tags && t.tags.length) { t.tags.pop(); save(); render(); pdpRenderTags(); } }
+  }
+}
+
+function tagInputCommit(ctx) {
+  const input = document.getElementById(ctx === 'modal' ? 'f-tags-input' : 'pdp-f-tags-input');
+  if (!input) return;
+  const val = input.value.replace(/,/g, '').trim();
+  if (!val) { input.value = ''; return; }
+  input.value = '';
+  if (ctx === 'modal') {
+    if (!_modalTags.includes(val)) { _modalTags.push(val); renderModalTags(); }
+  } else {
+    const t = tasks.find(x => x.id === _pdpTaskId);
+    if (!t) return;
+    t.tags = t.tags || [];
+    if (!t.tags.includes(val)) { t.tags.push(val); save(); render(); pdpRenderTags(); updateTagDatalist(); }
+  }
+}
+
+function renderModalTags() {
+  const el = document.getElementById('f-tags-chips');
+  if (!el) return;
+  el.innerHTML = _modalTags.map((tg, i) =>
+    `<span class="tag-chip">${escHtml(tg)}<span class="tag-chip-x" onclick="event.stopPropagation();_modalTags.splice(${i},1);renderModalTags()">×</span></span>`).join('');
+}
+
+function pdpRenderTags() {
+  const el = document.getElementById('pdp-f-tags-chips');
+  if (!el) return;
+  const t = tasks.find(x => x.id === _pdpTaskId);
+  const tags = (t && t.tags) || [];
+  el.innerHTML = tags.map((tg, i) =>
+    `<span class="tag-chip">${escHtml(tg)}<span class="tag-chip-x" onclick="event.stopPropagation();pdpRemoveTag(${i})">×</span></span>`).join('');
+}
+
+function pdpRemoveTag(i) {
+  const t = tasks.find(x => x.id === _pdpTaskId);
+  if (!t || !t.tags) return;
+  t.tags.splice(i, 1);
+  save(); render(); pdpRenderTags();
+}
+
 function openTaskModal(id) {
   if (id) { openProjDetail(id); return; }
   // New project: use original modal
@@ -2052,6 +2141,10 @@ function openTaskModal(id) {
   document.getElementById('f-status').value = 'pending';
   document.getElementById('f-notes').value = '';
   document.getElementById('edit-id').value = '';
+  _modalTags = [];
+  document.getElementById('f-tags-input').value = '';
+  renderModalTags();
+  updateTagDatalist();
   document.getElementById('modal-title').textContent = 'New project';
   document.getElementById('task-delete-action').style.display = 'none';
   document.getElementById('task-modal').classList.add('open');
@@ -2168,6 +2261,13 @@ function pdpRenderOverview(body, footer) {
       </div>
     </div>
     <div class="pdp-field">
+      <span class="pdp-label">Tags</span>
+      <div class="tag-input-wrap" onclick="document.getElementById('pdp-f-tags-input').focus()">
+        <span id="pdp-f-tags-chips" style="display:contents"></span>
+        <input class="tag-input" id="pdp-f-tags-input" placeholder="Add tag, press Enter" list="tag-suggestions" onkeydown="tagInputKeydown(event,'pdp')" onblur="tagInputCommit('pdp')">
+      </div>
+    </div>
+    <div class="pdp-field">
       <span class="pdp-label">Notes</span>
       <div style="position:relative">
         <textarea class="form-textarea" id="pdp-f-notes" style="min-height:80px;padding-right:70px;padding-bottom:32px" onblur="pdpAutosaveOverview()">${escHtml(task.notes || '')}</textarea>
@@ -2192,6 +2292,8 @@ function pdpRenderOverview(body, footer) {
     <div style="height:1px;background:var(--border);margin:8px -22px 8px"></div>
     <button class="btn" style="width:100%;justify-content:center;border-color:transparent;background:none;color:var(--muted2);opacity:.7" onmouseover="this.style.opacity='1';this.style.color='var(--rose)'" onmouseout="this.style.opacity='.7';this.style.color='var(--muted2)'" onclick="pdpDeleteProject()">✕ Delete project</button>
   `;
+  pdpRenderTags();
+  updateTagDatalist();
   pdpRenderTodayList();
 }
 
@@ -2627,6 +2729,7 @@ function saveTask() {
     status: newStatus,
     progress: existing ? existing.progress : 0,
     notes: document.getElementById('f-notes').value.trim(),
+    tags: existing ? (existing.tags || []) : _modalTags.slice(),
     statusHistory: existing ? (existing.statusHistory || []) : [],
   };
   // Record status change if editing and status changed, or new task
@@ -2800,14 +2903,37 @@ function wrRenderHeatmap(start, sessions) {
   if (lblEl) lblEl.innerHTML = labels.map(function(l){ return '<div class="wr-hm-lbl">' + l + '</div>'; }).join('');
 }
 
+var wrFocusMode = localStorage.getItem('jhtt_wr_focus_mode') || 'project';
+
+function wrSetFocusMode(mode) {
+  wrFocusMode = mode;
+  localStorage.setItem('jhtt_wr_focus_mode', mode);
+  wrRender();
+}
+
 function wrRenderFocusBars(sessions) {
   var el = document.getElementById('wr-focus-bars');
   if (!el) return;
+  var titleEl = document.getElementById('wr-focus-title');
+  if (titleEl) titleEl.textContent = wrFocusMode === 'tag' ? 'Focus by Tag' : 'Focus by Project';
+  var segP = document.getElementById('wr-seg-project'), segT = document.getElementById('wr-seg-tag');
+  if (segP && segT) {
+    segP.classList.toggle('active', wrFocusMode !== 'tag');
+    segT.classList.toggle('active', wrFocusMode === 'tag');
+  }
   var taskMap = {};
-  sessions.forEach(function(e) {
-    var key = e.taskName || 'Others';
-    taskMap[key] = (taskMap[key] || 0) + (e.mins || 0);
-  });
+  if (wrFocusMode === 'tag') {
+    sessions.forEach(function(e) {
+      var t = tasks.find(function(x){ return x.id === e.taskId; }) || tasks.find(function(x){ return x.name === e.taskName; });
+      var tgs = (t && t.tags && t.tags.length) ? t.tags : ['Untagged'];
+      tgs.forEach(function(tg) { taskMap[tg] = (taskMap[tg] || 0) + (e.mins || 0); });
+    });
+  } else {
+    sessions.forEach(function(e) {
+      var key = e.taskName || 'Others';
+      taskMap[key] = (taskMap[key] || 0) + (e.mins || 0);
+    });
+  }
   var sorted = Object.entries(taskMap).sort(function(a,b){return b[1]-a[1];}).slice(0,6);
   if (sorted.length === 0) { el.innerHTML = '<div class="empty empty-sm"><div class="empty-icon">⏱</div><div class="empty-text">No focus sessions this week</div></div>'; return; }
   var max = sorted[0][1];
