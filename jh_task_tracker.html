@@ -128,7 +128,7 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
 
 /* ── Kanban ── */
 .kanban-wrap{overflow-x:auto;padding-bottom:16px}
-.kanban-board{display:grid;grid-template-columns:repeat(4,minmax(240px,1fr));gap:14px;min-width:900px}
+.kanban-board{display:grid;grid-template-columns:repeat(4,minmax(240px,340px));gap:14px;min-width:900px}
 .kanban-col{background:var(--surface2);border:1px solid var(--border);border-radius:14px;display:flex;flex-direction:column;min-height:300px}
 .kanban-col-header{display:flex;align-items:center;gap:8px;padding:13px 14px 11px;border-bottom:1px solid var(--border)}
 .col-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
@@ -141,7 +141,7 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
 .kanban-card.dragging{opacity:.35;cursor:grabbing;transform:scale(.97);box-shadow:none}
 .kanban-card.kcard-drop-above{border-top:1px solid var(--sage);border-radius:10px}
 .kcard-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:7px;line-height:1.4}
-.kcard-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.kcard-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:0}
 .kcard-from{font-size:11px;color:var(--muted)}
 .kcard-due{font-size:10px;font-family:'DM Mono',monospace;color:var(--muted2)}
 .kcard-due.overdue{color:var(--rose);font-weight:700}
@@ -376,6 +376,10 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
 .tag-chip-x:hover{color:var(--rose)}
 .kcard-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:7px}
 .kcard-tag{font-size:9.5px;padding:1px 7px;border-radius:999px;background:var(--surface3);color:var(--muted);font-weight:600;letter-spacing:.02em}
+.kcard-tag.tc-0{background:rgba(122,95,168,.1);color:#7a5fa8;border:1px solid rgba(122,95,168,.22)}
+.kcard-tag.tc-1{background:rgba(74,122,181,.1);color:#4a7ab5;border:1px solid rgba(74,122,181,.22)}
+.kcard-tag.tc-2{background:rgba(58,138,138,.1);color:#3a8a8a;border:1px solid rgba(58,138,138,.22)}
+.kcard-tag.tc-3{background:rgba(160,90,138,.1);color:#a05a8a;border:1px solid rgba(160,90,138,.22)}
 .wr-seg{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;flex-shrink:0}
 .wr-seg-btn{border:none;background:var(--surface2);color:var(--muted);font-size:10px;padding:3px 10px;cursor:pointer;font-family:'Lato',sans-serif;font-weight:600;letter-spacing:.03em;transition:all .15s}
 .wr-seg-btn.active{background:var(--sage);color:#fff}
@@ -1599,6 +1603,12 @@ function statusBadge(s) {
   const [c,l] = m[s] || ['b-pending', s];
   return `<span class="badge ${c}">${l}</span>`;
 }
+function tagColorClass(tg) {
+  let h = 0;
+  for (let i = 0; i < tg.length; i++) h = (h * 31 + tg.charCodeAt(i)) >>> 0;
+  return 'tc-' + (h % 4);
+}
+
 function priorityBadge(p) {
   const m = {high:['b-high','High'], med:['b-med','Med'], low:['b-low','Low']};
   const [c,l] = m[p] || ['b-low', p];
@@ -1716,10 +1726,10 @@ function renderKanban() {
           <div class="kcard-name" style="margin-bottom:0">${t.name}</div>
           ${actualStr ? `<span style="font-size:10px;font-family:'DM Mono',monospace;color:var(--muted2);white-space:nowrap;flex-shrink:0">${actualStr}</span>` : ''}
         </div>
-        ${(t.tags && t.tags.length) ? `<div class="kcard-tags">${t.tags.map(tg => `<span class="kcard-tag">${escHtml(tg)}</span>`).join('')}</div>` : ''}
-        <div class="kcard-meta" style="justify-content:space-between">
-          <span>${t.due ? `<span class="kcard-due${od?' overdue':dueSoon?' due-soon':''}">due ${fmt(t.due)}</span>` : ''}</span>
-          ${priorityBadge(t.priority)}
+        <div class="kcard-meta">
+          ${(t.tags && t.tags.length) ? t.tags.map(tg => `<span class="kcard-tag ${tagColorClass(tg)}">${escHtml(tg)}</span>`).join('') : ''}
+          ${t.due ? `<span class="kcard-due${od?' overdue':dueSoon?' due-soon':''}">${fmt(t.due)}</span>` : ''}
+          <span style="margin-left:auto;flex-shrink:0">${priorityBadge(t.priority)}</span>
         </div>
         `;
       card.addEventListener('dragstart', e => {
@@ -1870,7 +1880,10 @@ function renderProjList() {
     const row = document.createElement('div');
     row.className = 'proj-list-row';
     row.innerHTML = `
-      <span class="proj-list-name">${t.name}</span>
+      <span class="proj-list-name" style="display:flex;align-items:center;gap:8px;min-width:0">
+        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.name}</span>
+        ${(t.tags && t.tags.length) ? t.tags.map(tg => `<span class="kcard-tag ${tagColorClass(tg)}" style="flex-shrink:0">${escHtml(tg)}</span>`).join('') : ''}
+      </span>
       <span class="proj-list-status">
         <span style="width:7px;height:7px;border-radius:50%;background:${STATUS_DOTS[t.status]||'#9aaa94'};display:inline-block;flex-shrink:0"></span>
         ${STATUS_LABELS[t.status] || t.status}
