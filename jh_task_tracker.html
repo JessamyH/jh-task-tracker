@@ -396,6 +396,9 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
 .empty-sm{padding:32px 20px}
 .toast{position:fixed;bottom:24px;right:24px;background:var(--sage3);color:#d8ecd8;border-radius:10px;padding:11px 18px;font-size:13px;font-weight:700;z-index:999;transform:translateY(16px);opacity:0;transition:all .25s ease;pointer-events:none;box-shadow:0 6px 20px rgba(10,28,18,.2)}
 .toast.show{transform:translateY(0);opacity:1}
+.sync-toast{position:fixed;bottom:24px;right:24px;display:flex;align-items:flex-start;gap:9px;max-width:300px;background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--sage);border-radius:11px;padding:11px 15px 11px 13px;font-size:12.5px;font-family:'Lato',sans-serif;color:var(--text);z-index:1000;transform:translateY(16px);opacity:0;transition:transform .28s cubic-bezier(.16,1,.3,1),opacity .28s ease;pointer-events:none;box-shadow:0 10px 30px rgba(10,28,18,.16);line-height:1.5;font-weight:600}
+.sync-toast.show{transform:translateY(0);opacity:1}
+.sync-toast .st-ic{font-size:13px;line-height:1.3;flex-shrink:0;margin-top:1px;font-weight:700}
 .tick-confirm{position:fixed;bottom:24px;right:24px;background:var(--sage3);color:#fff;border-radius:10px;padding:12px 14px 12px 18px;font-size:13px;font-weight:700;z-index:1000;display:none;align-items:center;gap:12px;max-width:340px;transform:translateY(16px);opacity:0;transition:all .25s ease;pointer-events:none;box-shadow:0 6px 20px rgba(10,28,18,.25)}
 .tick-confirm.show{transform:translateY(0);opacity:1;pointer-events:auto}
 .tick-confirm-text{flex:1;line-height:1.4}
@@ -7450,8 +7453,8 @@ function cycleTheme() {
     </div>
 
     <div style="display:flex;gap:8px;margin-top:18px">
-      <button class="btn" style="flex:1" onclick="syncManualPull()">⬇ Pull from cloud</button>
-      <button class="btn btn-primary" style="flex:1" onclick="syncManualPush()">⬆ Push to cloud</button>
+      <button class="btn" style="flex:1;justify-content:center" onclick="syncManualPull()" onmouseover="this.style.borderColor='var(--rose)';this.style.color='var(--rose)'" onmouseout="this.style.borderColor='';this.style.color=''">⬇ Pull from cloud</button>
+      <button class="btn" style="flex:1;justify-content:center" onclick="syncManualPush()">⬆ Push to cloud</button>
     </div>
 
     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
@@ -7531,6 +7534,55 @@ function cycleTheme() {
     return 'this device';
   }
 
+  // ---- notification (dedicated sync toast; leaves global showToast untouched) ----
+  let _stTimer=null;
+  function syncNotify(msg, type){
+    type = type || 'info';
+    const cfg = ({success:{c:'#4fae6f',i:'\u2713'}, info:{c:'#4a9ed0',i:'\u2601'}, warn:{c:'#d99a3a',i:'\u26a0'}, error:{c:'#cf6a6a',i:'\u2715'}})[type] || {c:'#4a9ed0',i:'\u2601'};
+    let el = document.getElementById('sync-toast');
+    if (!el){ el=document.createElement('div'); el.id='sync-toast'; el.className='sync-toast'; el.innerHTML='<span class="st-ic"></span><span class="st-msg"></span>'; document.body.appendChild(el); }
+    el.style.borderLeftColor = cfg.c;
+    const ic=el.querySelector('.st-ic'); ic.textContent=cfg.i; ic.style.color=cfg.c;
+    el.querySelector('.st-msg').textContent = msg;
+    el.classList.add('show');
+    clearTimeout(_stTimer);
+    _stTimer = setTimeout(()=>el.classList.remove('show'), (type==='warn'||type==='error')?4600:2600);
+  }
+
+  // ---- in-app confirm (replaces native confirm(); themed, returns a Promise) ----
+  function syncConfirm(opts){
+    opts = opts || {};
+    return new Promise(function(resolve){
+      var old = document.getElementById('sync-confirm'); if (old) old.remove();
+      var accent = opts.danger ? '#cf6a6a' : 'var(--sage)';
+      var ov = document.createElement('div');
+      ov.id = 'sync-confirm';
+      ov.style.cssText = 'position:fixed;inset:0;background:rgba(10,28,18,.45);backdrop-filter:blur(4px);z-index:1100;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;transition:opacity .18s ease';
+      ov.innerHTML =
+        '<div class="sc-card" style="background:var(--surface);border:1px solid var(--border);border-radius:16px;max-width:380px;width:100%;padding:22px 22px 18px;box-shadow:0 16px 48px rgba(10,28,18,.22);transform:translateY(8px);transition:transform .2s ease">'
+        + '<div style="font-family:\'Playfair Display\',serif;font-size:17px;color:var(--sage3);font-weight:600;margin-bottom:9px">' + (opts.title || 'Are you sure?') + '</div>'
+        + '<div style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:18px">' + (opts.message || '') + '</div>'
+        + '<div style="display:flex;gap:8px;justify-content:flex-end">'
+        + '<button class="sc-cancel" style="padding:7px 15px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12.5px;font-weight:700;cursor:pointer;font-family:\'Lato\',sans-serif">' + (opts.cancelText || 'Cancel') + '</button>'
+        + '<button class="sc-ok" style="padding:7px 15px;border-radius:8px;border:none;background:' + accent + ';color:#fff;font-size:12.5px;font-weight:700;cursor:pointer;font-family:\'Lato\',sans-serif">' + (opts.confirmText || 'Confirm') + '</button>'
+        + '</div></div>';
+      document.body.appendChild(ov);
+      var card = ov.querySelector('.sc-card');
+      requestAnimationFrame(function(){ ov.style.opacity='1'; card.style.transform='translateY(0)'; });
+      function done(val){
+        ov.style.opacity='0';
+        document.removeEventListener('keydown', onKey);
+        setTimeout(function(){ if (ov && ov.parentNode) ov.remove(); }, 180);
+        resolve(val);
+      }
+      function onKey(e){ if (e.key==='Escape') done(false); else if (e.key==='Enter') done(true); }
+      ov.querySelector('.sc-ok').onclick = function(){ done(true); };
+      ov.querySelector('.sc-cancel').onclick = function(){ done(false); };
+      ov.addEventListener('click', function(e){ if (e.target===ov) done(false); });
+      document.addEventListener('keydown', onKey);
+    });
+  }
+
   // ---- payload ----
   function collectPayload(){
     const data = {};
@@ -7590,7 +7642,7 @@ function cycleTheme() {
   // ---- push / pull ----
   async function doPush(opts){
     opts = opts || {};
-    if (!isConfigured()) { if(!opts.silent) showToast('Add a GitHub token in Sync first'); return; }
+    if (!isConfigured()) { if(!opts.silent) syncNotify('Add a GitHub token in Sync first', 'warn'); return; }
     if (_busy) return;
     _busy = true; setDot('sync');
     try {
@@ -7599,28 +7651,28 @@ function cycleTheme() {
       if (!id) { id = await remoteCreate(payload); localStorage.setItem(K_GIST, id); }
       else { await remoteUpdate(id, payload, opts.keepalive); }
       setMeta({ lastSync: payload.exportedAt, dirty:false });
-      if (!opts.silent) showToast('\u2601 Synced to cloud');
+      if (!opts.silent) syncNotify('Synced to cloud', 'success');
       refreshUI();
     } catch(e){
       setMeta(Object.assign(getMeta(), { dirty:true }));
-      if (!opts.silent) showToast('Push failed: ' + e.message);
+      if (!opts.silent) syncNotify('Push failed: ' + e.message, 'error');
       console.warn('[sync] push failed', e);
     } finally { _busy = false; setDot(); }
   }
 
   async function doPull(opts){
     opts = opts || {};
-    if (!isConfigured() || !getGist()) { if(!opts.silent) showToast('Nothing configured to pull from'); return; }
+    if (!isConfigured() || !getGist()) { if(!opts.silent) syncNotify('Nothing configured to pull from', 'info'); return; }
     if (_busy) return;
     _busy = true; setDot('sync');
     try {
       const { payload } = await remoteGet(getGist());
       applyPayload(payload);
       setMeta({ lastSync: payload.exportedAt || new Date().toISOString(), dirty:false });
-      showToast('\u2601 Loaded from cloud \u2014 reloading\u2026');
+      syncNotify('Loaded from cloud \u2014 reloading\u2026', 'success');
       setTimeout(() => location.reload(), 500);
     } catch(e){
-      if (!opts.silent) showToast('Pull failed: ' + e.message);
+      if (!opts.silent) syncNotify('Pull failed: ' + e.message, 'error');
       console.warn('[sync] pull failed', e);
       _busy = false; setDot();
     }
@@ -7662,9 +7714,9 @@ function cycleTheme() {
         // cloud has changes we haven't seen
         setDot('newer');
         if (meta.dirty) {
-          showToast('\u26a0 Cloud AND this device both changed \u2014 open Sync to resolve');
+          syncNotify('Cloud and this device both changed \u2014 open Sync to resolve', 'warn');
         } else {
-          showToast('\u2601 Cloud has newer data \u2014 open Sync \u2192 Pull to load');
+          syncNotify('Cloud has newer data \u2014 open Sync, then Pull to load', 'warn');
         }
       } else if (meta.dirty) {
         schedulePush();
@@ -7733,22 +7785,24 @@ function cycleTheme() {
     if (tok) localStorage.setItem(K_TOKEN, tok); else localStorage.removeItem(K_TOKEN);
     if (gid) localStorage.setItem(K_GIST, gid); else localStorage.removeItem(K_GIST);
     renderStatus(); setDot();
-    showToast('\u2601 Sync settings saved');
+    syncNotify('Sync settings saved', 'success');
   };
   window.syncManualPush = function(){ window.syncSaveConfig(); return doPush({}).then(renderStatus); };
-  window.syncManualPull = function(){
+  window.syncManualPull = async function(){
     window.syncSaveConfig();
-    if (!getGist()) { showToast('Enter a Gist ID first (from your other device)'); return; }
-    if (!confirm('This will REPLACE the data on '+deviceLabel()+' with the cloud version, then reload. Continue?')) return;
+    if (!getGist()) { syncNotify('Enter a Gist ID first (from your other device)', 'info'); return; }
+    const ok = await syncConfirm({ title:'Pull from cloud?', message:'This replaces the data on '+deviceLabel()+' with the cloud version, then reloads.', confirmText:'Pull and replace', danger:true });
+    if (!ok) return;
     return doPull({});
   };
-  window.syncDisconnect = function(){
-    if (!confirm('Remove sync token & gist from THIS device? Your data stays; cloud copy is untouched.')) return;
+  window.syncDisconnect = async function(){
+    const ok = await syncConfirm({ title:'Disconnect this device?', message:'Removes the sync token and Gist ID from this device only. Your data stays, and the cloud copy is untouched.', confirmText:'Disconnect' });
+    if (!ok) return;
     localStorage.removeItem(K_TOKEN); localStorage.removeItem(K_GIST); localStorage.removeItem(K_META);
     document.getElementById('sync-token-input').value='';
     document.getElementById('sync-gist-input').value='';
     renderStatus(); setDot();
-    showToast('Disconnected on this device');
+    syncNotify('Disconnected on this device', 'info');
   };
 
   // ---- boot ----
