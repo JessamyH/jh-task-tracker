@@ -358,6 +358,7 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
 /* ── Modal ── */
 .modal-overlay{position:fixed;inset:0;background:rgba(10,28,18,.45);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .18s}
 .modal-overlay.open{opacity:1;pointer-events:all}
+@keyframes syncpulse{0%,100%{opacity:1}50%{opacity:.35}}
 .modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;width:100%;max-width:500px;padding:28px;box-shadow:0 16px 48px rgba(10,28,18,.18);transform:translateY(10px);transition:transform .2s ease}
 .modal-overlay.open .modal{transform:translateY(0)}
 .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
@@ -626,14 +627,10 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
     <a class="nav-item" href="https://github.com/JessamyH/jh-task-tracker" target="_blank" rel="noopener" style="text-decoration:none;box-sizing:border-box"><span class="nav-icon" style="display:inline-flex;align-items:center;justify-content:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.73.5.5 5.73.5 12c0 5.08 3.29 9.39 7.86 10.91.57.1.78-.25.78-.55 0-.27-.01-1.16-.02-2.11-3.2.7-3.88-1.36-3.88-1.36-.52-1.34-1.28-1.7-1.28-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.21-1.49 3.18-1.18 3.18-1.18.63 1.59.23 2.76.11 3.05.74.8 1.19 1.83 1.19 3.09 0 4.43-2.7 5.41-5.26 5.69.41.36.78 1.07.78 2.16 0 1.56-.01 2.82-.01 3.2 0 .31.2.66.79.55A10.52 10.52 0 0 0 23.5 12C23.5 5.73 18.27.5 12 .5Z"/></svg></span> GitHub</a>
 
   </nav>
-  <div style="padding:8px 10px;margin-top:16px;margin-bottom:10px;display:flex;gap:6px">
-    <div style="flex:1;position:relative" onmouseenter="document.getElementById('export-tip').style.opacity='1';document.getElementById('export-tip').style.transform='translateY(0)'" onmouseleave="document.getElementById('export-tip').style.opacity='0';document.getElementById('export-tip').style.transform='translateY(4px)'">
-      <button onclick="exportData()" style="width:100%;padding:7px 8px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:rgba(255,255,255,.7);font-size:11px;font-weight:700;cursor:pointer;font-family:'Lato',sans-serif;letter-spacing:.04em" onmouseover="this.style.background='rgba(255,255,255,.12)'" onmouseout="this.style.background='rgba(255,255,255,.06)'">⬆ Export</button>
-      <div id="export-tip" style="position:absolute;bottom:calc(100% + 8px);left:0;transform:translateY(4px);background:var(--forest);color:rgba(255,255,255,.85);font-size:10px;font-family:'DM Mono',monospace;white-space:nowrap;padding:5px 10px;border-radius:7px;border:1px solid rgba(255,255,255,.12);pointer-events:none;opacity:0;transition:all .18s ease;letter-spacing:.04em;box-shadow:0 4px 12px rgba(0,0,0,.3);z-index:200">Press Ctrl+S anytime to backup<div style="position:absolute;top:100%;left:16px;border:5px solid transparent;border-top-color:var(--forest)"></div></div>
-    </div>
-    <div style="flex:1">
-      <button onclick="document.getElementById('import-file').click()" style="width:100%;padding:7px 8px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:rgba(255,255,255,.7);font-size:11px;font-weight:700;cursor:pointer;font-family:'Lato',sans-serif;letter-spacing:.04em" onmouseover="this.style.background='rgba(255,255,255,.12)'" onmouseout="this.style.background='rgba(255,255,255,.06)'">⬇ Import</button>
-    </div>
+  <div style="padding:0 10px;margin-top:14px;margin-bottom:12px;display:flex;gap:6px">
+    <button id="sync-btn" onclick="syncOpenModal()" title="Cloud Sync" style="flex:1;position:relative;padding:5px 0;border-radius:7px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:rgba(255,255,255,.72);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center" onmouseover="this.style.background='rgba(255,255,255,.12)'" onmouseout="this.style.background='rgba(255,255,255,.06)'">☁<span id="sync-dot" style="position:absolute;top:5px;right:8px;width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.3)"></span></button>
+    <button onclick="exportData()" title="Export (Ctrl+S)" style="flex:1;position:relative;padding:5px 0;border-radius:7px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:rgba(255,255,255,.72);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center" onmouseover="this.style.background='rgba(255,255,255,.12)'" onmouseout="this.style.background='rgba(255,255,255,.06)'">⬆</button>
+    <button onclick="document.getElementById('import-file').click()" title="Import" style="flex:1;position:relative;padding:5px 0;border-radius:7px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:rgba(255,255,255,.72);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center" onmouseover="this.style.background='rgba(255,255,255,.12)'" onmouseout="this.style.background='rgba(255,255,255,.06)'">⬇</button>
     <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(this)">
   </div>
   <div class="sidebar-bottom">
@@ -7430,6 +7427,39 @@ function cycleTheme() {
 </script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 
+<!-- Sync Modal -->
+<div class="modal-overlay" id="sync-modal">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-header">
+      <div class="modal-title">☁ Cloud Sync</div>
+      <button class="modal-close" onclick="syncCloseModal()">✕</button>
+    </div>
+
+    <div id="sync-status-line" style="font-size:12px;font-family:'DM Mono',monospace;color:var(--muted);margin-bottom:16px;padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;line-height:1.5"></div>
+
+    <div class="form-group">
+      <label class="form-label">GitHub Token</label>
+      <input id="sync-token-input" type="password" class="form-input" placeholder="ghp_… (stored only on this device)" autocomplete="off">
+      <div style="font-size:11px;color:var(--muted);margin-top:5px;line-height:1.5">Create at <span style="font-family:'DM Mono',monospace;color:var(--sage2)">github.com/settings/tokens</span> — classic token with <b>gist</b> scope, or a fine-grained token with <b>Gists: Read&nbsp;and&nbsp;write</b>. Kept in this browser only; never uploaded.</div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Gist ID <span style="font-weight:400;text-transform:none;letter-spacing:0">(leave blank to create a new private gist)</span></label>
+      <input id="sync-gist-input" type="text" class="form-input" placeholder="auto-created on first push" autocomplete="off">
+      <div style="font-size:11px;color:var(--muted);margin-top:5px;line-height:1.5">On your <b>second</b> device, paste the Gist ID shown here after the first device’s first push.</div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:18px">
+      <button class="btn" style="flex:1" onclick="syncManualPull()">⬇ Pull from cloud</button>
+      <button class="btn btn-primary" style="flex:1" onclick="syncManualPush()">⬆ Push to cloud</button>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+      <button onclick="syncDisconnect()" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;font-family:'Lato',sans-serif;text-decoration:underline">Disconnect this device</button>
+      <button class="btn" onclick="syncSaveConfig()">Save</button>
+    </div>
+  </div>
+</div>
 <!-- About Me Modal -->
 <div class="modal-overlay" id="aboutme-modal">
   <div class="modal" style="max-width:400px">
@@ -7465,6 +7495,268 @@ function cycleTheme() {
     <div class="pdp-footer" id="pdp-footer"></div>
   </div>
 </div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   Cloud Sync module — GitHub Gist backend
+   Self-contained. Device-local token/gist config (never synced).
+   Synced payload mirrors exportData() exactly.
+   ══════════════════════════════════════════════════════════════ */
+(function(){
+  // Keys that get synced (== exportData shape). NOT ai_key / pomo_state / theme / sync config.
+  const SYNC_KEYS = ['jhtt_tasks','jhtt_pomo_log','jhtt_daily','jhtt_backlog','jhtt_blockers','jhtt_ideas','jhtt_feedback','jhtt_routines','jhtt_username','jhtt_aboutme'];
+  // Device-local config keys
+  const K_TOKEN = 'jhtt_sync_token';
+  const K_GIST  = 'jhtt_sync_gist';
+  const K_META  = 'jhtt_sync_meta';   // {lastSync: ISO, dirty: bool}
+  const GIST_FILE = 'jh-task-tracker-data.json';
+  const API = 'https://api.github.com';
+  const DEBOUNCE_MS = 4000;
+
+  let _applying = false;      // true while we write pulled data (suppress dirty)
+  let _pushTimer = null;
+  let _busy = false;
+
+  // ---- config helpers ----
+  function getToken(){ return localStorage.getItem(K_TOKEN) || ''; }
+  function getGist(){ return localStorage.getItem(K_GIST) || ''; }
+  function isConfigured(){ return !!getToken(); }
+  function getMeta(){ try { return JSON.parse(localStorage.getItem(K_META)||'{}') || {}; } catch(e){ return {}; } }
+  function setMeta(m){ localStorage.setItem(K_META, JSON.stringify(m)); }
+  function deviceLabel(){
+    const p = navigator.platform || '';
+    if (/Mac/i.test(p)) return 'Mac';
+    if (/Win/i.test(p)) return 'Windows';
+    if (/Linux/i.test(p)) return 'Linux';
+    return 'this device';
+  }
+
+  // ---- payload ----
+  function collectPayload(){
+    const data = {};
+    SYNC_KEYS.forEach(k => { const v = localStorage.getItem(k); if (v !== null) data[k] = v; });
+    return { _app:'jh-task-tracker', _v:1, exportedAt:new Date().toISOString(), device:deviceLabel(), data };
+  }
+  function applyPayload(payload){
+    if (!payload || !payload.data) throw new Error('Malformed cloud data');
+    _applying = true;
+    try {
+      SYNC_KEYS.forEach(k => {
+        if (Object.prototype.hasOwnProperty.call(payload.data, k)) {
+          localStorage.setItem(k, payload.data[k]);
+        }
+      });
+    } finally { _applying = false; }
+  }
+
+  // ---- GitHub API ----
+  async function ghFetch(url, opts){
+    opts = opts || {};
+    opts.headers = Object.assign({
+      'Authorization': 'Bearer ' + getToken(),
+      'Accept': 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28'
+    }, opts.headers || {});
+    const res = await fetch(url, opts);
+    if (!res.ok) {
+      let msg = res.status + ' ' + res.statusText;
+      try { const j = await res.json(); if (j && j.message) msg = j.message; } catch(e){}
+      throw new Error(msg);
+    }
+    return res;
+  }
+  async function remoteCreate(payload){
+    const body = { description:'JH Task Tracker sync', public:false, files:{} };
+    body.files[GIST_FILE] = { content: JSON.stringify(payload, null, 2) };
+    const res = await ghFetch(API + '/gists', { method:'POST', body: JSON.stringify(body) });
+    const j = await res.json();
+    return j.id;
+  }
+  async function remoteUpdate(id, payload, keepalive){
+    const body = { files:{} };
+    body.files[GIST_FILE] = { content: JSON.stringify(payload, null, 2) };
+    await ghFetch(API + '/gists/' + id, { method:'PATCH', body: JSON.stringify(body), keepalive: !!keepalive });
+  }
+  async function remoteGet(id){
+    const res = await ghFetch(API + '/gists/' + id);
+    const j = await res.json();
+    const f = j.files && j.files[GIST_FILE];
+    if (!f) throw new Error('Sync file not found in gist');
+    let content = f.content;
+    if (f.truncated && f.raw_url) { content = await (await fetch(f.raw_url)).text(); }
+    return { payload: JSON.parse(content), updatedAt: j.updated_at };
+  }
+
+  // ---- push / pull ----
+  async function doPush(opts){
+    opts = opts || {};
+    if (!isConfigured()) { if(!opts.silent) showToast('Add a GitHub token in Sync first'); return; }
+    if (_busy) return;
+    _busy = true; setDot('sync');
+    try {
+      const payload = collectPayload();
+      let id = getGist();
+      if (!id) { id = await remoteCreate(payload); localStorage.setItem(K_GIST, id); }
+      else { await remoteUpdate(id, payload, opts.keepalive); }
+      setMeta({ lastSync: payload.exportedAt, dirty:false });
+      if (!opts.silent) showToast('\u2601 Synced to cloud');
+      refreshUI();
+    } catch(e){
+      setMeta(Object.assign(getMeta(), { dirty:true }));
+      if (!opts.silent) showToast('Push failed: ' + e.message);
+      console.warn('[sync] push failed', e);
+    } finally { _busy = false; setDot(); }
+  }
+
+  async function doPull(opts){
+    opts = opts || {};
+    if (!isConfigured() || !getGist()) { if(!opts.silent) showToast('Nothing configured to pull from'); return; }
+    if (_busy) return;
+    _busy = true; setDot('sync');
+    try {
+      const { payload } = await remoteGet(getGist());
+      applyPayload(payload);
+      setMeta({ lastSync: payload.exportedAt || new Date().toISOString(), dirty:false });
+      showToast('\u2601 Loaded from cloud \u2014 reloading\u2026');
+      setTimeout(() => location.reload(), 500);
+    } catch(e){
+      if (!opts.silent) showToast('Pull failed: ' + e.message);
+      console.warn('[sync] pull failed', e);
+      _busy = false; setDot();
+    }
+  }
+
+  // ---- dirty tracking via localStorage.setItem interceptor ----
+  const _origSet = localStorage.setItem.bind(localStorage);
+  localStorage.setItem = function(k, v){
+    _origSet(k, v);
+    try {
+      if (!_applying && isConfigured() && SYNC_KEYS.indexOf(k) !== -1) {
+        setMeta(Object.assign(getMeta(), { dirty:true }));
+        schedulePush();
+      }
+    } catch(e){}
+  };
+  function schedulePush(){
+    if (_pushTimer) clearTimeout(_pushTimer);
+    _pushTimer = setTimeout(() => { _pushTimer=null; doPush({silent:true}); }, DEBOUNCE_MS);
+  }
+
+  // ---- flush pending on tab hide / unload (best-effort) ----
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'hidden' && isConfigured() && getGist() && getMeta().dirty) {
+      if (_pushTimer) { clearTimeout(_pushTimer); _pushTimer=null; }
+      try { remoteUpdate(getGist(), collectPayload(), true).then(()=>setMeta({lastSync:new Date().toISOString(),dirty:false})).catch(()=>{}); } catch(e){}
+    }
+  });
+
+  // ---- load-time check: is cloud newer? (non-destructive) ----
+  async function loadCheck(){
+    if (!isConfigured() || !getGist()) { setDot(); return; }
+    try {
+      const { payload } = await remoteGet(getGist());
+      const remoteTime = payload.exportedAt || '';
+      const meta = getMeta();
+      const last = meta.lastSync || '';
+      if (remoteTime && remoteTime > last) {
+        // cloud has changes we haven't seen
+        setDot('newer');
+        if (meta.dirty) {
+          showToast('\u26a0 Cloud AND this device both changed \u2014 open Sync to resolve');
+        } else {
+          showToast('\u2601 Cloud has newer data \u2014 open Sync \u2192 Pull to load');
+        }
+      } else if (meta.dirty) {
+        schedulePush();
+        setDot('pending');
+      } else {
+        setDot('ok');
+      }
+    } catch(e){ setDot('err'); console.warn('[sync] load check failed', e); }
+  }
+
+  // ---- dot indicator ----
+  function setDot(state){
+    const dot = document.getElementById('sync-dot');
+    if (!dot) return;
+    if (!isConfigured()) { dot.style.background='rgba(255,255,255,.3)'; dot.title=''; return; }
+    const colors = { ok:'#5fbf7f', newer:'#e0a34a', pending:'#e0a34a', sync:'#4a9ed0', err:'#d06a6a' };
+    dot.style.background = colors[state] || (getMeta().dirty ? '#e0a34a' : '#5fbf7f');
+    if (state==='sync') { dot.style.animation='syncpulse 1s ease-in-out infinite'; }
+    else { dot.style.animation='none'; }
+  }
+
+  // ---- UI refresh after data changes (mirror importData sequence) ----
+  function refreshUI(){
+    try {
+      if (typeof render==='function') render();
+      if (typeof dailyRender==='function') dailyRender();
+      if (typeof ideasRender==='function') ideasRender();
+      if (typeof fbRender==='function') fbRender();
+      if (typeof routinesRenderList==='function') routinesRenderList();
+      if (typeof loadUserNameAndAbout==='function') loadUserNameAndAbout();
+    } catch(e){}
+  }
+
+  // ---- modal + status ----
+  function fmtTime(iso){
+    if (!iso) return 'never';
+    try { const d=new Date(iso); return d.toLocaleString(); } catch(e){ return iso; }
+  }
+  function renderStatus(){
+    const el = document.getElementById('sync-status-line');
+    if (!el) return;
+    if (!isConfigured()) {
+      el.innerHTML = 'Not connected. Add a GitHub token below, then <b>Push</b> from your main device to create the cloud copy.';
+      return;
+    }
+    const m = getMeta();
+    const gid = getGist();
+    let s = 'Connected on <b>'+deviceLabel()+'</b>.<br>';
+    s += gid ? ('Gist: <span style="color:var(--sage2)">'+gid+'</span><br>') : 'No gist yet \u2014 push to create one.<br>';
+    s += 'Last sync: '+fmtTime(m.lastSync);
+    if (m.dirty) s += ' <span style="color:#c98a3a">\u2022 unsynced changes</span>';
+    el.innerHTML = s;
+  }
+
+  // ---- public handlers ----
+  window.syncOpenModal = function(){
+    document.getElementById('sync-token-input').value = getToken();
+    document.getElementById('sync-gist-input').value = getGist();
+    renderStatus();
+    document.getElementById('sync-modal').classList.add('open');
+  };
+  window.syncCloseModal = function(){ document.getElementById('sync-modal').classList.remove('open'); };
+  window.syncSaveConfig = function(){
+    const tok = document.getElementById('sync-token-input').value.trim();
+    const gid = document.getElementById('sync-gist-input').value.trim();
+    if (tok) localStorage.setItem(K_TOKEN, tok); else localStorage.removeItem(K_TOKEN);
+    if (gid) localStorage.setItem(K_GIST, gid); else localStorage.removeItem(K_GIST);
+    renderStatus(); setDot();
+    showToast('\u2601 Sync settings saved');
+  };
+  window.syncManualPush = function(){ window.syncSaveConfig(); return doPush({}).then(renderStatus); };
+  window.syncManualPull = function(){
+    window.syncSaveConfig();
+    if (!getGist()) { showToast('Enter a Gist ID first (from your other device)'); return; }
+    if (!confirm('This will REPLACE the data on '+deviceLabel()+' with the cloud version, then reload. Continue?')) return;
+    return doPull({});
+  };
+  window.syncDisconnect = function(){
+    if (!confirm('Remove sync token & gist from THIS device? Your data stays; cloud copy is untouched.')) return;
+    localStorage.removeItem(K_TOKEN); localStorage.removeItem(K_GIST); localStorage.removeItem(K_META);
+    document.getElementById('sync-token-input').value='';
+    document.getElementById('sync-gist-input').value='';
+    renderStatus(); setDot();
+    showToast('Disconnected on this device');
+  };
+
+  // ---- boot ----
+  function boot(){ setDot(); loadCheck(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
+</script>
 
 <script>
 (function(){
