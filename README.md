@@ -28,10 +28,10 @@ JH Task Tracker is intentionally simple.
 
 * ✅ No installation
 * ✅ No account
-* ✅ No cloud sync
 * ✅ No backend
+* ✅ Cloud sync is opt-in, not required
 
-Everything runs locally in your browser, so your data stays on your own machine.
+Everything runs locally in your browser by default, so your data stays on your own machine unless you turn sync on yourself.
 
 ## 🚀 Features
 
@@ -39,17 +39,25 @@ Everything runs locally in your browser, so your data stays on your own machine.
 
 #### Daily List
 
-Plan your day, organize tasks by project, prioritize important work, and easily carry unfinished tasks forward.
+Plan your day, organize tasks by project, prioritize important work, and easily carry unfinished tasks forward. Schedule items for Today or Tomorrow, log time manually against a task, and add time estimates that sync with the Pomodoro timer.
 
 #### Backlog & Blockers
 
 Keep a running backlog alongside your daily work. Track blockers with status and notes, then move them into your daily list when you're ready.
 
+#### Routines
+
+Set up recurring tasks that auto-generate into your Daily List (with a Tomorrow group) so repeat work never needs re-typing.
+
+#### Ideas & Feedback
+
+Capture ideas and product feedback/bugs as draggable, starrable cards, kept separate from your day-to-day task lists.
+
 #### Pomodoro Timer
 
-Stay focused with a built-in Pomodoro timer and automatic session logging.
+Stay focused with a built-in Pomodoro timer and automatic session logging. Let a session continue past its estimate instead of stopping, edit a logged session's duration after the fact, and get a sound when a break ends.
 
-Export focus history to Excel by project and date range.
+Export focus history to Excel by project and date range, including a By Tag summary sheet.
 
 
 ### 📋 Project Management
@@ -61,17 +69,21 @@ Manage projects with either:
 * Kanban Board (To Do → In Progress → In Review → Done)
 * Sortable List View
 
-Track due dates, priorities, and total focus time for every project.
+Track due dates, priorities, tags, and total focus time for every project.
 
 #### Weekly Report
 
 Generate a visual summary of your week's work, including:
 
-* Focus time
+* Focus time (with a per-tag toggle)
 * Completed tasks
 * Weekly heatmap
 * Per-project breakdown
 
+
+### 🎨 Themes
+
+Switch between a green and an orange theme from the sidebar.
 
 ### 🤖 AI Features *(Optional)*
 
@@ -103,6 +115,10 @@ Bring your own Claude API key to enable:
 * Weekly standups
 * Freeform chat
 
+### ☁️ Cloud Sync *(Optional)*
+
+Sync your data between devices (e.g. Mac ↔ Windows) using your own private GitHub Gist. Bring your own GitHub token — it's kept in the browser only and never uploaded anywhere else.
+
 
 ## 🚀 Getting Started
 
@@ -114,9 +130,9 @@ Everything is stored locally using your browser's `localStorage`.
 
 No installation.
 No account.
-No data leaves your machine.
+No data leaves your machine unless you enable AI features or Cloud Sync yourself.
 
-> **Optional:** Add your Claude API key in **Settings** to enable AI features.
+> **Optional:** Add your Claude API key in **Settings** to enable AI features, or your GitHub token in **Sync** to enable Cloud Sync.
 
 
 ## 🛠 Tech Stack
