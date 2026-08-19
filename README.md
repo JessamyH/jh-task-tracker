@@ -29,9 +29,8 @@ JH Task Tracker is intentionally simple.
 * ✅ No installation
 * ✅ No account
 * ✅ No backend
-* ✅ Cloud sync is opt-in, not required
 
-Everything runs locally in your browser by default, so your data stays on your own machine unless you turn sync on yourself.
+Everything runs locally in your browser, so your data stays on your own machine.
 
 ## 🚀 Features
 
@@ -75,7 +74,7 @@ Track due dates, priorities, tags, and total focus time for every project.
 
 Generate a visual summary of your week's work, including:
 
-* Focus time (with a per-tag toggle)
+* Focus time
 * Completed tasks
 * Weekly heatmap
 * Per-project breakdown
