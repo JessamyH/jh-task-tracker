@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>JH Task Tracker</title>
 <meta name="theme-color" id="meta-theme-color" content="#5a8a6a">
-<link rel="icon" type="image/svg+xml" id="favicon-link" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%235a8a6a'/><text x='16' y='22' font-size='17' text-anchor='middle'>🌿</text></svg>">
+<link rel="icon" type="image/svg+xml" id="favicon-link" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%235a8a6a'/><path d='M15.55 23.65A6.3 6.3 0 0 1 14.47 11.14C19.6 10.15 20.95 9.68 22.75 7.45c0.9 1.8 1.8 3.76 1.8 7.2c0 4.95 -4.3 9 -9 9Z M7.45 24.55c0 -2.7 1.67 -4.82 4.57 -5.4C14.2 18.72 16.45 17.35 17.35 16.45' fill='none' stroke='%23d8ecd8' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Lato:wght@300;400;700&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -54,7 +54,7 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
 .nav-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:9px;cursor:pointer;font-size:13px;color:rgba(255,255,255,.55);transition:all .15s;border:none;background:none;width:100%;text-align:left;font-family:'Lato',sans-serif}
 .nav-item:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.85)}
 .nav-item.active{background:var(--nav-active-bg, rgba(122,184,154,.2));color:var(--tea);font-weight:700}
-.nav-icon{font-size:18px;width:22px;text-align:center;opacity:.8}
+.nav-icon{font-size:18px;width:22px;text-align:center;opacity:.8;display:inline-flex;align-items:center;justify-content:center}
 .nav-badge{margin-left:auto;background:rgba(255,255,255,.08);font-family:'DM Mono',monospace;font-size:10px;padding:1px 7px;border-radius:999px;color:rgba(255,255,255,.4)}
 .nav-item.active .nav-badge{background:var(--nav-active-badge, rgba(122,184,154,.25));color:var(--tea)}
 .sidebar-bottom{padding:14px 10px;border-top:1px solid rgba(255,255,255,.08)}
@@ -128,7 +128,7 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
 
 /* ── Kanban ── */
 .kanban-wrap{overflow-x:auto;padding-bottom:16px}
-.kanban-board{display:grid;grid-template-columns:repeat(4,minmax(240px,340px));gap:14px;min-width:900px}
+.kanban-board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;width:100%;min-width:760px}
 .kanban-col{background:var(--surface2);border:1px solid var(--border);border-radius:14px;display:flex;flex-direction:column;min-height:300px}
 .kanban-col-header{display:flex;align-items:center;gap:8px;padding:13px 14px 11px;border-bottom:1px solid var(--border)}
 .col-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
@@ -175,9 +175,9 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
 
 
 /* ── Daily List ── */
-.daily-layout{display:grid;grid-template-columns:1fr minmax(320px,35%);gap:0;min-height:660px;align-items:stretch}
-.daily-main{padding:20px 28px 24px;display:flex;flex-direction:column;gap:14px;height:660px;overflow:hidden;box-sizing:border-box}
-.daily-side{padding:20px 18px;display:flex;flex-direction:column;gap:20px;background:var(--surface);position:sticky;top:58px;height:650px;overflow:hidden}
+.daily-layout{display:grid;grid-template-columns:1fr minmax(320px,35%);gap:0;height:max(420px,calc(100vh - 150px));align-items:stretch}
+.daily-main{padding:20px 28px 24px;display:flex;flex-direction:column;gap:14px;height:100%;overflow:hidden;box-sizing:border-box}
+.daily-side{padding:20px 18px;display:flex;flex-direction:column;gap:20px;background:var(--surface);position:sticky;top:58px;height:100%;overflow:hidden}
 .daily-side .backlog-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px;min-height:0}
 .daily-group-header{display:flex;align-items:center;gap:10px;margin-top:4px}
 .daily-group-line{flex:1;height:1px;background:var(--border)}
@@ -609,31 +609,31 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
 <aside class="sidebar">
   <div class="sidebar-logo">
     <div class="logo-row">
-      <div class="logo-leaf" id="logo-leaf-inner">🌿</div>
+      <div class="logo-leaf" id="logo-leaf-inner"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#d8ecd8" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg></div>
       <div><div class="logo-title">JH Task Tracker</div></div>
     </div>
   </div>
   <nav class="sidebar-nav">
     <div class="nav-section">Views</div>
-    <button class="nav-item active" onclick="setView('dashboard',this)"><span class="nav-icon">⊞</span> Dashboard</button>
-    <button class="nav-item" onclick="setView('daily',this)" id="nav-daily"><span class="nav-icon">☀</span> Daily List</button>
-    <button class="nav-item" onclick="setView('kanban',this)"><span class="nav-icon">≡</span> Projects</button>
-    <button class="nav-item" onclick="setView('ideas',this)" id="nav-ideas"><span class="nav-icon">💡</span> Ideas</button>
+    <button class="nav-item active" onclick="setView('dashboard',this)"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg></span> Dashboard</button>
+    <button class="nav-item" onclick="setView('daily',this)" id="nav-daily"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg></span> Daily List</button>
+    <button class="nav-item" onclick="setView('kanban',this)"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14"/><path d="M12 5v8"/><path d="M18 5v11"/></svg></span> Projects</button>
+    <button class="nav-item" onclick="setView('ideas',this)" id="nav-ideas"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1.3.5 2.6 1.5 3.5.8.8 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span> Ideas</button>
     <div class="nav-section">Focus</div>
-    <button class="nav-item" onclick="setView('pomodoro',this)" id="nav-pomodoro"><span class="nav-icon">⏱</span> Pomodoro</button>
-    <button class="nav-item" onclick="setView('weekly',this)" id="nav-weekly"><span class="nav-icon">📊</span> Weekly Report</button>
+    <button class="nav-item" onclick="setView('pomodoro',this)" id="nav-pomodoro"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></svg></span> Pomodoro</button>
+    <button class="nav-item" onclick="setView('weekly',this)" id="nav-weekly"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg></span> Weekly Report</button>
     <div class="nav-section">AI</div>
-    <button class="nav-item" onclick="setView('ai',this)" id="nav-ai"><span class="nav-icon">✦</span> AI Assistant</button>
-    <button class="nav-item" onclick="setView('meeting',this)" id="nav-meeting"><span class="nav-icon">🎙</span> Meeting</button>
+    <button class="nav-item" onclick="setView('ai',this)" id="nav-ai"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg></span> AI Assistant</button>
+    <button class="nav-item" onclick="setView('meeting',this)" id="nav-meeting"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg></span> Meeting</button>
     <div class="nav-section">Dev</div>
-    <button class="nav-item" onclick="setView('feedback',this)" id="nav-feedback"><span class="nav-icon">✨</span> Feedback</button>
+    <button class="nav-item" onclick="setView('feedback',this)" id="nav-feedback"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span> Feedback</button>
     <a class="nav-item" href="https://github.com/JessamyH/jh-task-tracker" target="_blank" rel="noopener" style="text-decoration:none;box-sizing:border-box"><span class="nav-icon" style="display:inline-flex;align-items:center;justify-content:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.73.5.5 5.73.5 12c0 5.08 3.29 9.39 7.86 10.91.57.1.78-.25.78-.55 0-.27-.01-1.16-.02-2.11-3.2.7-3.88-1.36-3.88-1.36-.52-1.34-1.28-1.7-1.28-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.21-1.49 3.18-1.18 3.18-1.18.63 1.59.23 2.76.11 3.05.74.8 1.19 1.83 1.19 3.09 0 4.43-2.7 5.41-5.26 5.69.41.36.78 1.07.78 2.16 0 1.56-.01 2.82-.01 3.2 0 .31.2.66.79.55A10.52 10.52 0 0 0 23.5 12C23.5 5.73 18.27.5 12 .5Z"/></svg></span> GitHub</a>
 
   </nav>
   <div style="padding:0 10px;margin-top:14px;margin-bottom:12px;display:flex;gap:6px">
-    <button id="sync-btn" onclick="syncOpenModal()" title="Cloud Sync" style="flex:1;position:relative;padding:5px 0;border-radius:7px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:rgba(255,255,255,.72);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center" onmouseover="this.style.background='rgba(255,255,255,.12)'" onmouseout="this.style.background='rgba(255,255,255,.06)'">☁<span id="sync-dot" style="position:absolute;top:5px;right:8px;width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.3)"></span></button>
-    <button onclick="exportData()" title="Export (Ctrl+S)" style="flex:1;position:relative;padding:5px 0;border-radius:7px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:rgba(255,255,255,.72);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center" onmouseover="this.style.background='rgba(255,255,255,.12)'" onmouseout="this.style.background='rgba(255,255,255,.06)'">⬆</button>
-    <button onclick="document.getElementById('import-file').click()" title="Import" style="flex:1;position:relative;padding:5px 0;border-radius:7px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:rgba(255,255,255,.72);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center" onmouseover="this.style.background='rgba(255,255,255,.12)'" onmouseout="this.style.background='rgba(255,255,255,.06)'">⬇</button>
+    <button id="sync-btn" onclick="syncOpenModal()" title="Cloud Sync" style="flex:1;position:relative;padding:5px 0;border-radius:7px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:rgba(255,255,255,.72);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center" onmouseover="this.style.background='rgba(255,255,255,.12)'" onmouseout="this.style.background='rgba(255,255,255,.06)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg><span id="sync-dot" style="position:absolute;top:5px;right:8px;width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.3)"></span></button>
+    <button onclick="exportData()" title="Export (Ctrl+S)" style="flex:1;position:relative;padding:5px 0;border-radius:7px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:rgba(255,255,255,.72);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center" onmouseover="this.style.background='rgba(255,255,255,.12)'" onmouseout="this.style.background='rgba(255,255,255,.06)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg></button>
+    <button onclick="document.getElementById('import-file').click()" title="Import" style="flex:1;position:relative;padding:5px 0;border-radius:7px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:rgba(255,255,255,.72);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center" onmouseover="this.style.background='rgba(255,255,255,.12)'" onmouseout="this.style.background='rgba(255,255,255,.06)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m5 12 7 7 7-7"/></svg></button>
     <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(this)">
   </div>
   <div class="sidebar-bottom">
@@ -792,12 +792,12 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
       </div>
       <div style="display:flex;flex-direction:column;gap:16px">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-          <div class="wr-card" style="height:260px;display:flex;flex-direction:column;box-sizing:border-box">
+          <div class="wr-card" style="height:max(180px,calc((100vh - 326px)/2));display:flex;flex-direction:column;box-sizing:border-box">
             <div class="wr-card-title">Daily Activity <span id="wr-hm-total" style="font-weight:400;letter-spacing:0;text-transform:none;color:var(--muted2)"></span></div>
             <div class="wr-heatmap" id="wr-heatmap"></div>
             <div class="wr-hm-labels" id="wr-hm-labels"></div>
           </div>
-          <div class="wr-card" style="height:260px;display:flex;flex-direction:column;box-sizing:border-box">
+          <div class="wr-card" style="height:max(180px,calc((100vh - 326px)/2));display:flex;flex-direction:column;box-sizing:border-box">
             <div class="wr-card-title" style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:8px">
               <span id="wr-focus-title">Focus by Project</span>
               <div class="wr-seg">
@@ -809,11 +809,11 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
           </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-          <div class="wr-export-area" style="margin-top:0;height:260px;display:flex;flex-direction:column;box-sizing:border-box">
+          <div class="wr-export-area" style="margin-top:0;height:max(180px,calc((100vh - 326px)/2));display:flex;flex-direction:column;box-sizing:border-box">
             <div class="wr-export-title" style="margin-bottom:14px;flex-shrink:0">Upcoming Deadlines</div>
             <div id="wr-deadlines" style="display:flex;flex-direction:column;gap:8px;overflow-y:auto;flex:1"></div>
           </div>
-          <div class="wr-export-area" style="margin-top:0;height:260px;display:flex;flex-direction:column;box-sizing:border-box">
+          <div class="wr-export-area" style="margin-top:0;height:max(180px,calc((100vh - 326px)/2));display:flex;flex-direction:column;box-sizing:border-box">
             <div class="wr-export-title" style="margin-bottom:14px;flex-shrink:0">This Week's Done</div>
             <div id="wr-done-list" style="display:flex;flex-direction:column;gap:8px;overflow-y:auto;flex:1"></div>
           </div>
@@ -846,7 +846,7 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
 
         <!-- Chat area -->
         <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow)">
-          <div id="ai-chat-messages" style="height:480px;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:14px">
+          <div id="ai-chat-messages" style="height:max(300px,calc(100vh - 410px));overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:14px">
             <div class="ai-msg ai-msg-assistant" id="ai-greeting-msg">
               <div class="ai-label">AI</div>
               <div class="ai-bubble ai-bubble-assistant" id="ai-greeting-bubble">Hi there <span class="ai-brand-icon">🌿</span> I'm here to make your workday a little lighter and more organized.<br><br>Here's what I can help with:<br>· <b>Weekly Standup</b> — choose a date range and I'll summarize your tasks and Pomodoro logs<br>· <b>Draft Email</b> — I'll prepare a clean draft for you to refine<br>· <b>Translate to English</b> — type in Chinese and I'll turn it into natural English<br><br>Take your time, one step at a time ✨</div>
@@ -996,7 +996,7 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
       </div><!-- end left col -->
 
         <!-- Right: Quick Notes -->
-        <div style="flex:1;min-width:0;position:sticky;top:20px;align-self:stretch;display:flex;flex-direction:column;padding-bottom:14px">
+        <div style="flex:1;min-width:0;position:sticky;top:20px;align-self:stretch;display:flex;flex-direction:column;padding-bottom:14px;min-height:max(300px,calc(100vh - 114px))">
           <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--shadow-sm);flex:1;display:flex;flex-direction:column">
             <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--border);background:var(--surface2)">
               <div style="font-size:12px;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase">Notes</div>
@@ -1338,7 +1338,7 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
             </div>
           </div>
           <!-- Session log -->
-          <div class="pomo-card" id="pomo-log-card" style="display:flex;flex-direction:column;min-height:0">
+          <div class="pomo-card" id="pomo-log-card" style="display:flex;flex-direction:column;min-height:0;height:max(300px,calc(100vh - 290px))">
             <div style="font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
               <span>Session Log <span id="pomo-log-count" style="font-weight:400;color:var(--muted2)"></span></span>
               <div style="display:flex;align-items:center;gap:10px">
@@ -3055,7 +3055,7 @@ function wrRenderDone(start, end, offset) {
   }).sort(function(a,b){ return parseDate(b.completedAt||b.date||0) - new Date(a.completedAt||a.date||0); });
   if (doneList.length === 0) {
     if (offset !== 0) {
-      el.innerHTML = '<div class="empty empty-sm"><div class="empty-icon" style="font-size:22px;opacity:.3">🏆</div><div class="empty-text" style="opacity:.3">No projects completed this week</div></div>';
+      el.innerHTML = '<div class="empty empty-sm"><div class="empty-icon" style="opacity:.3"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C17.15 18.75 18 20.24 18 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg></div><div class="empty-text" style="opacity:.3">No projects completed this week</div></div>';
     } else {
       var ipCount = tasks.filter(function(t){ return t.status === 'in-progress'; }).length;
       var irCount = tasks.filter(function(t){ return t.status === 'in-review'; }).length;
@@ -3070,7 +3070,7 @@ function wrRenderDone(start, end, offset) {
   el.innerHTML = doneList.map(function(t) {
     var dateStr = (t.completedAt || t.date) ? parseDate(t.completedAt || t.date).toLocaleDateString('en-AU', {day:'numeric', month:'short'}) : '';
     return '<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:0 8px 8px 0;border-left:3px solid var(--amber);border-top:.5px solid rgba(184,134,11,.2);border-right:.5px solid rgba(184,134,11,.2);border-bottom:.5px solid rgba(184,134,11,.2);background:rgba(184,134,11,.04)">'
-      + '<span style="font-size:18px;flex-shrink:0">🏆</span>'
+      + '<span style="flex-shrink:0;display:inline-flex;color:var(--amber)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C17.15 18.75 18 20.24 18 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg></span>'
       + '<div style="flex:1;min-width:0">'
       + '<div style="font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + t.name + '</div>'
       + (dateStr ? '<div style="font-size:11px;color:var(--muted);margin-top:1px">' + dateStr + '</div>' : '')
@@ -7389,7 +7389,7 @@ function applyTheme(id) {
   const leaf = document.getElementById('logo-leaf-inner');
   if (leaf) leaf.innerHTML = id === 'orange'
     ? '<svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#ffe4d0" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12c2 -2.96 0 -7 -1 -8c0 3.038 -1.773 4.741 -3 6c-1.226 1.26 -2 3.24 -2 5a6 6 0 1 0 12 0c0 -1.532 -1.056 -3.94 -2 -5c-1.786 3 -2.791 3 -4 2z"/></svg>'
-    : '🌿';
+    : '<svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#d8ecd8" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>';
   // Update browser tab favicon + theme-color
   const isOrange = id === 'orange';
   const favicon = document.getElementById('favicon-link');
@@ -7397,7 +7397,7 @@ function applyTheme(id) {
     if (isOrange) {
       favicon.href = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23da7756'/><path d='M16 16.5c1.87 -2.77 0 -6.53 -0.93 -7.47c0 2.84 -1.66 4.42 -2.8 5.6c-1.14 1.18 -1.87 3.02 -1.87 4.67a5.6 5.6 0 1 0 11.2 0c0 -1.44 -0.99 -3.68 -1.87 -4.67c-1.67 2.8 -2.6 2.8 -3.73 1.87z' fill='none' stroke='%23ffe4d0' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>";
     } else {
-      favicon.href = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%235a8a6a'/><text x='16' y='22' font-size='17' text-anchor='middle'>🌿</text></svg>";
+      favicon.href = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%235a8a6a'/><path d='M15.55 23.65A6.3 6.3 0 0 1 14.47 11.14C19.6 10.15 20.95 9.68 22.75 7.45c0.9 1.8 1.8 3.76 1.8 7.2c0 4.95 -4.3 9 -9 9Z M7.45 24.55c0 -2.7 1.67 -4.82 4.57 -5.4C14.2 18.72 16.45 17.35 17.35 16.45' fill='none' stroke='%23d8ecd8' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>";
     }
   }
   const metaColor = document.getElementById('meta-theme-color');
