@@ -6635,12 +6635,12 @@ function dailyRender() {
       }
     }
     const taskOptions = tasks.filter(t => t.status !== 'done').map(t => `<option value="${t.id}">${t.name.length > 35 ? t.name.slice(0,35)+'…' : t.name}</option>`).join('');
-    html += `<div style="flex:1"></div>`;
     if (doneItems.length > 0) {
       const doneOpen = localStorage.getItem('daily_done_open') === '1';
       html += `<div class="daily-group-header" style="margin-top:8px;cursor:pointer;flex-shrink:0" onclick="dailyToggleDone()"><span class="daily-group-label">DONE · ${doneItems.length}</span><div class="daily-group-line"></div><span id="done-toggle-arrow" style="font-size:11px;color:var(--muted2);flex-shrink:0">${doneOpen ? '▴ hide' : '▾ show'}</span></div>`;
       html += `<div id="done-items-wrap" style="display:${doneOpen ? 'flex' : 'none'};flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;padding-right:4px" class="scroll-hide">${doneItems.map(i => renderItem(i, false)).join('')}</div>`;
     }
+    html += `<div style="flex:1"></div>`;
     html += `<div class="daily-add-row">
       <div style="display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;flex-shrink:0">
         <button type="button" onclick="dailySetAddDate('today')" title="Add for today" style="padding:0 10px;height:36px;font-size:12px;border:none;cursor:pointer;font-family:'Lato',sans-serif;white-space:nowrap;background:${_dailyAddDate==='today'?'var(--sage)':'var(--surface)'};color:${_dailyAddDate==='today'?'#fff':'var(--muted)'}">Today</button>
