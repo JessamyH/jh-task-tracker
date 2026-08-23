@@ -2171,7 +2171,7 @@ function updateTagDatalist() {
 
 function tagInputKeydown(e, ctx) {
   const input = e.target;
-  if (e.key === 'Enter' || e.key === ',') {
+  if (e.key === 'Enter') {
     e.preventDefault();
     tagInputCommit(ctx);
   } else if (e.key === 'Backspace' && input.value === '') {
@@ -2183,33 +2183,38 @@ function tagInputKeydown(e, ctx) {
 function tagInputCommit(ctx) {
   const input = document.getElementById(ctx === 'modal' ? 'f-tags-input' : 'pdp-f-tags-input');
   if (!input) return;
-  const val = input.value.replace(/,/g, '').trim();
+  const val = input.value.trim();
   if (!val) { input.value = ''; return; }
   input.value = '';
   if (ctx === 'modal') {
-    if (!_modalTags.includes(val)) { _modalTags.push(val); renderModalTags(); }
+    _modalTags = [val];
+    renderModalTags();
   } else {
     const t = tasks.find(x => x.id === _pdpTaskId);
     if (!t) return;
-    t.tags = t.tags || [];
-    if (!t.tags.includes(val)) { t.tags.push(val); save(); render(); pdpRenderTags(); updateTagDatalist(); }
+    t.tags = [val];
+    save(); render(); pdpRenderTags(); updateTagDatalist();
   }
 }
 
 function renderModalTags() {
   const el = document.getElementById('f-tags-chips');
+  const input = document.getElementById('f-tags-input');
   if (!el) return;
   el.innerHTML = _modalTags.map((tg, i) =>
     `<span class="tag-chip tc-${tagColorIndex(tg)}"><button type="button" class="tag-chip-dot tc-${tagColorIndex(tg)}" data-tag="${escHtml(tg)}" title="Change color" onclick="event.stopPropagation();tagColorPopupOpen(this.dataset.tag,this,function(){render();renderModalTags();})"></button>${escHtml(tg)}<span class="tag-chip-x" onclick="event.stopPropagation();_modalTags.splice(${i},1);renderModalTags()">×</span></span>`).join('');
+  if (input) input.style.display = _modalTags.length ? 'none' : '';
 }
 
 function pdpRenderTags() {
   const el = document.getElementById('pdp-f-tags-chips');
+  const input = document.getElementById('pdp-f-tags-input');
   if (!el) return;
   const t = tasks.find(x => x.id === _pdpTaskId);
   const tags = (t && t.tags) || [];
   el.innerHTML = tags.map((tg, i) =>
     `<span class="tag-chip tc-${tagColorIndex(tg)}"><button type="button" class="tag-chip-dot tc-${tagColorIndex(tg)}" data-tag="${escHtml(tg)}" title="Change color" onclick="event.stopPropagation();tagColorPopupOpen(this.dataset.tag,this,function(){render();pdpRenderTags();})"></button>${escHtml(tg)}<span class="tag-chip-x" onclick="event.stopPropagation();pdpRemoveTag(${i})">×</span></span>`).join('');
+  if (input) input.style.display = tags.length ? 'none' : '';
 }
 
 function pdpRemoveTag(i) {
@@ -4183,12 +4188,13 @@ function pomoExportLog(fromDate, toDate) {
     const t = tasks.find(x => x.id === e.taskId) || tasks.find(x => x.name === e.taskName);
     return (t && t.tags && t.tags.length) ? t.tags.join(', ') : '';
   };
-  const sheet1Data = [['Date', 'Time', 'Project', 'Tags', 'Note', 'Duration (min)']];
+  const sheet1Data = [['Date', 'Time', 'Project', 'Tags', 'Note', 'Duration (min)', 'Hours']];
   sortedLog.forEach(e => {
     const d = new Date(e.ts);
-    const date = d.toLocaleDateString('en-GB', {year:'numeric', month:'short', day:'2-digit'});
+    const date = d.getFullYear() + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + String(d.getDate()).padStart(2,'0');
     const time = d.toLocaleTimeString('en-AU', {hour:'2-digit', minute:'2-digit', hour12:false});
-    sheet1Data.push([date, time, e.taskName || 'Others', tagsFor(e), e.note || '', e.mins || 0]);
+    const mins = e.mins || 0;
+    sheet1Data.push([date, time, e.taskName || 'Others', tagsFor(e), e.note || '', mins, Math.round(mins / 60 * 100) / 100]);
   });
 
   // ── Sheet 2: Time by Project
@@ -4224,12 +4230,18 @@ const sheet2Data = [['Project', 'Total (min)', 'Hours', 'Distribution']];
 
   // Sheet 1
   const ws1 = XLSX.utils.aoa_to_sheet(sheet1Data);
-  ws1['!cols'] = [{wch:12},{wch:7},{wch:26},{wch:18},{wch:45},{wch:14}];
+  ws1['!cols'] = [{wch:12},{wch:7},{wch:26},{wch:18},{wch:45},{wch:14},{wch:8}];
   // Header style
   const s1HeaderStyle = {font:{bold:true,color:{rgb:'FFFFFF'}},fill:{fgColor:{rgb:'4A7C5A'}},alignment:{horizontal:'center'}};
-  ['A1','B1','C1','D1','E1','F1'].forEach(c => {
+  ['A1','B1','C1','D1','E1','F1','G1'].forEach(c => {
     if (ws1[c]) ws1[c].s = s1HeaderStyle;
   });
+  // Right-align Hours column
+  const hoursStyle = {alignment:{horizontal:'right'}};
+  for (let i = 2; i <= sheet1Data.length; i++) {
+    const cell = 'G' + i;
+    if (ws1[cell]) ws1[cell].s = hoursStyle;
+  }
   // Freeze header row
   ws1['!freeze'] = {xSplit:'0', ySplit:'1', topLeftCell:'A2', activePane:'bottomLeft', state:'frozen'};
 
@@ -4300,10 +4312,10 @@ const sheet2Data = [['Project', 'Total (min)', 'Hours', 'Distribution']];
   XLSX.utils.book_append_sheet(wb, ws2, 'By Project');
   XLSX.utils.book_append_sheet(wb, ws3, 'By Tag');
   const firstName = (localStorage.getItem('jhtt_username') || 'focus').split(' ')[0];
-  const fmtFilDate = d => { const dt = new Date(d); return String(dt.getDate()).padStart(2,'0') + ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][dt.getMonth()] + dt.getFullYear(); };
+  const fmtFilDate = d => { const dt = new Date(d); return dt.getFullYear() + '-' + String(dt.getMonth()+1).padStart(2,'0') + '-' + String(dt.getDate()).padStart(2,'0'); };
   const fileFrom = fmtFilDate(fromDate || (sortedLog.length > 0 ? sortedLog[0].ts : new Date()));
   const fileTo = fmtFilDate(toDate || new Date());
-  XLSX.writeFile(wb, fileFrom + '-' + fileTo + '-' + firstName + '.xlsx');
+  XLSX.writeFile(wb, fileFrom + '_' + fileTo + '_' + firstName + '.xlsx');
   showToast('✅ Session log exported');
 }
 
