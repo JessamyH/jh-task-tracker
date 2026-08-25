@@ -4386,13 +4386,18 @@ const sheet2Data = [['Project', 'Total (min)', 'Hours', 'Distribution']];
   if (sheet4Data) {
     ws4 = XLSX.utils.aoa_to_sheet(sheet4Data);
     ws4['!cols'] = [{wch:12},{wch:55},{wch:8},{wch:18}];
-    const s4HeaderStyle = {font:{bold:true,color:{rgb:'FFFFFF'}},fill:{fgColor:{rgb:'4A7C5A'}},alignment:{horizontal:'center'}};
+    const s4HeaderStyle = {font:{bold:true,color:{rgb:'FFFFFF'}},fill:{fgColor:{rgb:'4A7C5A'}},alignment:{horizontal:'center',vertical:'center'}};
     ['A1','B1','C1','D1'].forEach(c => { if (ws4[c]) ws4[c].s = s4HeaderStyle; });
-    const hoursStyle4 = {alignment:{horizontal:'right'}};
+    const leftStyle4 = {alignment:{horizontal:'left',vertical:'center'}};
+    const rightStyle4 = {alignment:{horizontal:'right',vertical:'center'}};
     for (let i = 2; i <= sheet4Data.length; i++) {
-      const cell = 'C' + i;
-      if (ws4[cell]) ws4[cell].s = hoursStyle4;
+      if (ws4['A' + i]) ws4['A' + i].s = leftStyle4;
+      if (ws4['B' + i]) ws4['B' + i].s = leftStyle4;
+      if (ws4['C' + i]) ws4['C' + i].s = rightStyle4;
+      if (ws4['D' + i]) ws4['D' + i].s = rightStyle4;
     }
+    // Extra row height for breathing room between lines
+    ws4['!rows'] = sheet4Data.map((row, i) => ({hpt: i === 0 ? 20 : 18}));
     ws4['!freeze'] = {xSplit:'0', ySplit:'1', topLeftCell:'A2', activePane:'bottomLeft', state:'frozen'};
   }
 
