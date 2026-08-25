@@ -4287,10 +4287,10 @@ const sheet2Data = [['Project', 'Total (min)', 'Hours', 'Distribution']];
         showToast('Generating AI summaries for Timesheet…');
         const summaries = await pomoGenerateTimesheetSummaries(tsRows, aiKey);
         tsRows.forEach((row, i) => { row.summary = (summaries[i] || '').toString(); });
-        sheet4Data = [['Date', 'Tags', 'Work Item', 'Hours']];
+        sheet4Data = [['Date', 'Work Item', 'Tags', 'Hours']];
         tsRows.forEach(r => {
           const workItem = r.project + (r.summary ? ' — ' + r.summary : '');
-          sheet4Data.push([r.date, r.tags, workItem, Math.round(r.mins / 60 * 100) / 100]);
+          sheet4Data.push([r.date, workItem, r.tags, Math.round(r.mins / 60 * 100) / 100]);
         });
       } catch (err) {
         showToast('⚠ AI summary failed, Timesheet skipped: ' + err.message);
@@ -4385,7 +4385,7 @@ const sheet2Data = [['Project', 'Total (min)', 'Hours', 'Distribution']];
   let ws4 = null;
   if (sheet4Data) {
     ws4 = XLSX.utils.aoa_to_sheet(sheet4Data);
-    ws4['!cols'] = [{wch:12},{wch:18},{wch:55},{wch:8}];
+    ws4['!cols'] = [{wch:12},{wch:55},{wch:18},{wch:8}];
     const s4HeaderStyle = {font:{bold:true,color:{rgb:'FFFFFF'}},fill:{fgColor:{rgb:'4A7C5A'}},alignment:{horizontal:'center'}};
     ['A1','B1','C1','D1'].forEach(c => { if (ws4[c]) ws4[c].s = s4HeaderStyle; });
     const hoursStyle4 = {alignment:{horizontal:'right'}};
