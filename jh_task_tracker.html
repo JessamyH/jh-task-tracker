@@ -4168,14 +4168,50 @@ function pomoExportHighlight(active) {
     if (btn) { btn.style.borderColor = p === active ? 'var(--sage)' : ''; btn.style.color = p === active ? 'var(--sage2)' : ''; }
   });
 }
-function pomoExportConfirm() {
+async function pomoExportConfirm() {
   const fromVal = document.getElementById('pomo-exp-from').value;
   const toVal = document.getElementById('pomo-exp-to').value;
   closePomoExportModal();
-  pomoExportLog(fromVal || null, toVal || null);
+  await pomoExportLog(fromVal || null, toVal || null);
 }
 
-function pomoExportLog(fromDate, toDate) {
+// Ask the AI for very short (<6 words) notes summarising each Timesheet row's combined focus-session notes
+async function pomoGenerateTimesheetSummaries(rows, key) {
+  const items = rows.map((r, i) => ({ i, project: r.project, notes: r.notes.join(' | ') || '(no notes)' }));
+  const prompt = 'For each numbered work log entry below, write a note under 6 words summarising what was worked on that day for that project, based on its notes (fall back to the project name if notes are empty). Be factual and concise, no trailing punctuation.\n\n' +
+    items.map(it => it.i + '. Project: ' + it.project + ' | Notes: ' + it.notes).join('\n') +
+    '\n\nRespond ONLY with a valid JSON array of strings, same length and order as the list above, e.g. ["summary 1", "summary 2"]. No extra text.';
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-5',
+      max_tokens: 1000,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}));
+    throw new Error((e.error && e.error.message) || ('Request failed ' + res.status));
+  }
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  let raw = data.content.map(b => b.text || '').join('');
+  raw = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+  const start = raw.indexOf('['), end = raw.lastIndexOf(']');
+  if (start !== -1 && end !== -1) raw = raw.slice(start, end + 1);
+  const arr = JSON.parse(raw);
+  if (!Array.isArray(arr)) throw new Error('Unexpected AI response');
+  return arr;
+}
+
+async function pomoExportLog(fromDate, toDate) {
   if (pomoLog.length === 0) { showToast('No sessions to export'); return; }
   const localDate = ts => { const d = new Date(ts); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); };
   let filtered = [...pomoLog];
@@ -4188,13 +4224,13 @@ function pomoExportLog(fromDate, toDate) {
     const t = tasks.find(x => x.id === e.taskId) || tasks.find(x => x.name === e.taskName);
     return (t && t.tags && t.tags.length) ? t.tags.join(', ') : '';
   };
-  const sheet1Data = [['Date', 'Time', 'Project', 'Tags', 'Note', 'Duration (min)', 'Hours']];
+  const sheet1Data = [['Date', 'Time', 'Project', 'Tags', 'Note', 'Duration (min)']];
   sortedLog.forEach(e => {
     const d = new Date(e.ts);
     const date = d.getFullYear() + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + String(d.getDate()).padStart(2,'0');
     const time = d.toLocaleTimeString('en-AU', {hour:'2-digit', minute:'2-digit', hour12:false});
     const mins = e.mins || 0;
-    sheet1Data.push([date, time, e.taskName || 'Others', tagsFor(e), e.note || '', mins, Math.round(mins / 60 * 100) / 100]);
+    sheet1Data.push([date, time, e.taskName || 'Others', tagsFor(e), e.note || '', mins]);
   });
 
   // ── Sheet 2: Time by Project
@@ -4225,21 +4261,57 @@ const sheet2Data = [['Project', 'Total (min)', 'Hours', 'Distribution']];
   sheet2Data.push(['', '', '', '']);
   sheet2Data.push(['TOTAL', totalMins, Math.round(totalMins / 60 * 10) / 10, rangeFrom + ' → ' + rangeTo]);
 
+  // ── Sheet 4: Timesheet (one row per Date+Project, hours summed, AI-summarised note) — only if an AI key is configured
+  let sheet4Data = null;
+  const aiKey = aiGetKey();
+  if (aiKey) {
+    const tsMap = {};
+    const tsOrder = [];
+    sortedLog.forEach(e => {
+      if (e.type !== 'focus') return;
+      const d = new Date(e.ts);
+      const date = d.getFullYear() + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + String(d.getDate()).padStart(2,'0');
+      const project = e.taskName || 'Others';
+      const key = date + '||' + project;
+      if (!tsMap[key]) {
+        tsMap[key] = { date, project, tags: tagsFor(e), mins: 0, notes: [] };
+        tsOrder.push(key);
+      }
+      tsMap[key].mins += (e.mins || 0); // accumulate raw minutes; convert to hours once at the end to avoid rounding drift
+      if (e.note && e.note.trim()) tsMap[key].notes.push(e.note.trim());
+    });
+    const tsRows = tsOrder.map(k => tsMap[k]);
+
+    if (tsRows.length > 0) {
+      try {
+        showToast('Generating AI summaries for Timesheet…');
+        const summaries = await pomoGenerateTimesheetSummaries(tsRows, aiKey);
+        tsRows.forEach((row, i) => { row.summary = (summaries[i] || '').toString(); });
+        sheet4Data = [['Date', 'Project', 'Tags', 'Note', 'Hours']];
+        tsRows.forEach(r => {
+          sheet4Data.push([r.date, r.project, r.tags, r.summary || '', Math.round(r.mins / 60 * 100) / 100]);
+        });
+      } catch (err) {
+        showToast('⚠ AI summary failed, Timesheet skipped: ' + err.message);
+      }
+    }
+  }
+
   // ── Build workbook with styling
   const wb = XLSX.utils.book_new();
 
   // Sheet 1
   const ws1 = XLSX.utils.aoa_to_sheet(sheet1Data);
-  ws1['!cols'] = [{wch:12},{wch:7},{wch:26},{wch:18},{wch:45},{wch:14},{wch:8}];
+  ws1['!cols'] = [{wch:12},{wch:7},{wch:26},{wch:18},{wch:45},{wch:14}];
   // Header style
   const s1HeaderStyle = {font:{bold:true,color:{rgb:'FFFFFF'}},fill:{fgColor:{rgb:'4A7C5A'}},alignment:{horizontal:'center'}};
-  ['A1','B1','C1','D1','E1','F1','G1'].forEach(c => {
+  ['A1','B1','C1','D1','E1','F1'].forEach(c => {
     if (ws1[c]) ws1[c].s = s1HeaderStyle;
   });
-  // Right-align Hours column
+  // Right-align Duration column
   const hoursStyle = {alignment:{horizontal:'right'}};
   for (let i = 2; i <= sheet1Data.length; i++) {
-    const cell = 'G' + i;
+    const cell = 'F' + i;
     if (ws1[cell]) ws1[cell].s = hoursStyle;
   }
   // Freeze header row
@@ -4308,9 +4380,25 @@ const sheet2Data = [['Project', 'Total (min)', 'Hours', 'Distribution']];
   if (ws3[tagTotalECell]) ws3[tagTotalECell].s = {font:{italic:true,bold:true,color:{rgb:'2D6A4F'}},fill:{fgColor:{rgb:'E8F4EC'}},alignment:{horizontal:'center'}};
   ws3['!freeze'] = {xSplit:'0', ySplit:'1', topLeftCell:'A2', activePane:'bottomLeft', state:'frozen'};
 
-  XLSX.utils.book_append_sheet(wb, ws1, 'Session Log');
+  // Sheet 4: Timesheet
+  let ws4 = null;
+  if (sheet4Data) {
+    ws4 = XLSX.utils.aoa_to_sheet(sheet4Data);
+    ws4['!cols'] = [{wch:12},{wch:26},{wch:18},{wch:40},{wch:8}];
+    const s4HeaderStyle = {font:{bold:true,color:{rgb:'FFFFFF'}},fill:{fgColor:{rgb:'4A7C5A'}},alignment:{horizontal:'center'}};
+    ['A1','B1','C1','D1','E1'].forEach(c => { if (ws4[c]) ws4[c].s = s4HeaderStyle; });
+    const hoursStyle4 = {alignment:{horizontal:'right'}};
+    for (let i = 2; i <= sheet4Data.length; i++) {
+      const cell = 'E' + i;
+      if (ws4[cell]) ws4[cell].s = hoursStyle4;
+    }
+    ws4['!freeze'] = {xSplit:'0', ySplit:'1', topLeftCell:'A2', activePane:'bottomLeft', state:'frozen'};
+  }
+
+  if (ws4) XLSX.utils.book_append_sheet(wb, ws4, 'Timesheet');
   XLSX.utils.book_append_sheet(wb, ws2, 'By Project');
   XLSX.utils.book_append_sheet(wb, ws3, 'By Tag');
+  XLSX.utils.book_append_sheet(wb, ws1, 'Session Log');
   const firstName = (localStorage.getItem('jhtt_username') || 'focus').split(' ')[0];
   const fmtFilDate = d => { const dt = new Date(d); return dt.getFullYear() + '-' + String(dt.getMonth()+1).padStart(2,'0') + '-' + String(dt.getDate()).padStart(2,'0'); };
   const fileFrom = fmtFilDate(fromDate || (sortedLog.length > 0 ? sortedLog[0].ts : new Date()));
@@ -4398,11 +4486,11 @@ function pomoExportHighlight(active) {
     if (btn) { btn.style.borderColor = p === active ? 'var(--sage)' : ''; btn.style.color = p === active ? 'var(--sage2)' : ''; }
   });
 }
-function pomoExportConfirm() {
+async function pomoExportConfirm() {
   const fromVal = document.getElementById('pomo-exp-from').value;
   const toVal = document.getElementById('pomo-exp-to').value;
   closePomoExportModal();
-  pomoExportLog(fromVal || null, toVal || null);
+  await pomoExportLog(fromVal || null, toVal || null);
 }
 
 
@@ -4485,11 +4573,11 @@ function pomoExportHighlight(active) {
     if (btn) { btn.style.borderColor = p === active ? 'var(--sage)' : ''; btn.style.color = p === active ? 'var(--sage2)' : ''; }
   });
 }
-function pomoExportConfirm() {
+async function pomoExportConfirm() {
   const fromVal = document.getElementById('pomo-exp-from').value;
   const toVal = document.getElementById('pomo-exp-to').value;
   closePomoExportModal();
-  pomoExportLog(fromVal || null, toVal || null);
+  await pomoExportLog(fromVal || null, toVal || null);
 }
 
 
