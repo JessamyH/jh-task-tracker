@@ -4289,7 +4289,7 @@ const sheet2Data = [['Project', 'Total (min)', 'Hours', 'Distribution']];
         tsRows.forEach((row, i) => { row.summary = (summaries[i] || '').toString(); });
         sheet4Data = [['Date', 'Tags', 'Work Item', 'Hours']];
         tsRows.forEach(r => {
-          const workItem = r.project + (r.summary ? ': ' + r.summary : '');
+          const workItem = r.project + (r.summary ? ' — ' + r.summary : '');
           sheet4Data.push([r.date, r.tags, workItem, Math.round(r.mins / 60 * 100) / 100]);
         });
       } catch (err) {
