@@ -854,7 +854,7 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
         <!-- Quick action buttons -->
         <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
           <button class="btn" onclick="aiQuickAction('standup')" style="font-size:12px;padding:8px 14px">📢 Weekly Standup</button>
-          <button class="btn" onclick="aiQuickAction('email')" style="font-size:12px;padding:8px 14px">📧 Draft Email</button>
+          <button class="btn" onclick="aiQuickAction('efficiency')" style="font-size:12px;padding:8px 14px">📊 Efficiency Review</button>
           <button class="btn" onclick="aiQuickAction('translate')" style="font-size:12px;padding:8px 14px">CN→EN</button>
           <button class="btn" onclick="aiQuickAction('translateCN')" style="font-size:12px;padding:8px 14px">EN→CN</button>
           <button class="btn" onclick="aiClearChat()" style="font-size:12px;padding:8px 14px;margin-left:auto;color:var(--muted)">🗑 Clear</button>
@@ -865,7 +865,7 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
           <div id="ai-chat-messages" style="height:max(300px,calc(100vh - 410px));overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:14px">
             <div class="ai-msg ai-msg-assistant" id="ai-greeting-msg">
               <div class="ai-label">AI</div>
-              <div class="ai-bubble ai-bubble-assistant" id="ai-greeting-bubble">Hi there <span class="ai-brand-icon">🌿</span> I'm here to make your workday a little lighter and more organized.<br><br>Here's what I can help with:<br>· <b>Weekly Standup</b> — choose a date range and I'll summarize your tasks and Pomodoro logs<br>· <b>Draft Email</b> — I'll prepare a clean draft for you to refine<br>· <b>Translate to English</b> — type in Chinese and I'll turn it into natural English<br><br>Take your time, one step at a time ✨</div>
+              <div class="ai-bubble ai-bubble-assistant" id="ai-greeting-bubble">Hi there <span class="ai-brand-icon">🌿</span> I'm here to make your workday a little lighter and more organized.<br><br>Here's what I can help with:<br>· <b>Weekly Standup</b> — choose a date range and I'll summarize your tasks and Pomodoro logs<br>· <b>Efficiency Review</b> — I'll analyze how your week actually went and suggest concrete improvements<br>· <b>Translate to English</b> — type in Chinese and I'll turn it into natural English<br><br>Take your time, one step at a time ✨</div>
             </div>
             <script>
               (function(){
@@ -4908,10 +4908,57 @@ function aiSetInput(text) {
 function aiClearChat() {
   aiHistory = [];
   const box = document.getElementById('ai-chat-messages');
-  if (box) box.innerHTML = `<div class="ai-msg ai-msg-assistant"><div class="ai-label">AI</div><div class="ai-bubble ai-bubble-assistant">Hi ${(localStorage.getItem('jhtt_username') || 'there').split(' ')[0]} <span class="ai-brand-icon">🌿</span> I'm here to make your workday a little lighter and more organized.<br><br>Here's what I can help with:<br>· <b>Weekly Standup</b> — choose a date range and I'll summarize your tasks and Pomodoro logs<br>· <b>Draft Email</b> — I'll prepare a clean draft for you to refine<br>· <b>Translate to English</b> — type in Chinese and I'll turn it into natural English<br><br>Take your time, one step at a time ✨</div></div>`;
+  if (box) box.innerHTML = `<div class="ai-msg ai-msg-assistant"><div class="ai-label">AI</div><div class="ai-bubble ai-bubble-assistant">Hi ${(localStorage.getItem('jhtt_username') || 'there').split(' ')[0]} <span class="ai-brand-icon">🌿</span> I'm here to make your workday a little lighter and more organized.<br><br>Here's what I can help with:<br>· <b>Weekly Standup</b> — choose a date range and I'll summarize your tasks and Pomodoro logs<br>· <b>Efficiency Review</b> — I'll analyze how your week actually went and suggest concrete improvements<br>· <b>Translate to English</b> — type in Chinese and I'll turn it into natural English<br><br>Take your time, one step at a time ✨</div></div>`;
+}
+
+function aiRenderEfficiency(text) {
+  const sectionMeta = {
+    'Metrics': { icon: '📊', color: 'var(--sage3)' },
+    "What's Working": { icon: '✅', color: 'var(--sage2)' },
+    'Bottlenecks': { icon: '⚠️', color: 'var(--amber)' },
+    'Recommendations': { icon: '💡', color: 'var(--sage2)' },
+  };
+  let title = '', score = '', currentSection = null, currentItems = [];
+  const sections = [];
+  text.split('\n').forEach(line => {
+    const stripped = line.replace(/\*\*/g, '').trim();
+    if (!stripped) return;
+    if (stripped.startsWith('Efficiency Review')) { title = stripped; return; }
+    if (stripped.startsWith('Score:')) { score = stripped.slice(6).trim(); return; }
+    const secMatch = Object.keys(sectionMeta).find(k => stripped === k + ':' || stripped === k);
+    if (secMatch) {
+      if (currentSection) sections.push({ name: currentSection, items: currentItems });
+      currentSection = secMatch; currentItems = []; return;
+    }
+    if (line.trim().startsWith('- ') && currentSection) {
+      currentItems.push(line.trim().slice(2).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>'));
+    }
+  });
+  if (currentSection) sections.push({ name: currentSection, items: currentItems });
+
+  let html = `<div style="font-family:'Lato',sans-serif">`;
+  if (title) html += `<div style="font-size:13px;font-weight:700;color:var(--sage3);margin-bottom:6px;padding-bottom:10px;border-bottom:1px solid var(--border)">${title}</div>`;
+  if (score) html += `<div style="font-size:12px;font-weight:600;color:var(--text);margin:10px 0 4px">⭐ ${score}</div>`;
+  sections.forEach(sec => {
+    const meta = sectionMeta[sec.name] || { icon: '·', color: 'var(--muted)' };
+    html += `<div style="border-top:.5px solid var(--border);margin:10px 0"></div>`;
+    html += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px"><span style="font-size:12px">${meta.icon}</span><span style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:${meta.color}">${sec.name}</span></div>`;
+    html += `<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:2px">`;
+    if (sec.items.length === 0) {
+      html += `<span style="font-size:12px;color:var(--muted2)">None</span>`;
+    } else {
+      sec.items.forEach(item => {
+        html += `<div style="font-size:12px;color:var(--text);line-height:1.55;display:flex;gap:7px"><span style="color:${meta.color};flex-shrink:0;margin-top:1px">·</span><span>${item}</span></div>`;
+      });
+    }
+    html += `</div>`;
+  });
+  html += `</div>`;
+  return { html, isHtml: true };
 }
 
 function aiRenderMarkdown(text) {
+  if (text.includes('**Efficiency Review')) return aiRenderEfficiency(text);
   const isStandup = text.includes('**This Week:**');
   if (isStandup) {
     const sections = [];
@@ -5016,7 +5063,7 @@ function aiSetStatus(msg) {
   if (el) el.textContent = msg;
 }
 
-async function aiCall(userText) {
+async function aiCall(userText, opts = {}) {
   const key = aiGetKey();
   if (!key) {
     aiCheckKey();
@@ -5041,10 +5088,10 @@ async function aiCall(userText) {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-5',
-        max_tokens: 1000,
+        max_tokens: opts.maxTokens || 1000,
         system: (function(){
           const _fn = (localStorage.getItem('jhtt_username') || 'Your Name').split(' ')[0];
-          const _about = localStorage.getItem('jhtt_aboutme') || ''; return 'You are a helpful bilingual assistant embedded in JH Task Tracker, a personal productivity app used by ' + _fn + (_about ? ', ' + _about : '') + '.\n\nYour responsibilities:\n- Translate Chinese text to natural, professional English\n- Summarise weekly task and Pomodoro data into clean reports or standups\n- Help draft professional emails and messages\n- Answer work-related questions concisely\n\nRules:\n- Always reply in English, unless the user explicitly asks for Chinese output\n- For translation requests, output only the clean translated text — no preamble\n- For email drafts, always sign off with \"Best regards,\\n' + _fn + '\"\n- Be concise and practical';
+          const _about = localStorage.getItem('jhtt_aboutme') || ''; return 'You are a helpful bilingual assistant embedded in JH Task Tracker, a personal productivity app used by ' + _fn + (_about ? ', ' + _about : '') + '.\n\nYour responsibilities:\n- Translate Chinese text to natural, professional English\n- Summarise weekly task and Pomodoro data into clean reports or standups\n- Analyse productivity and efficiency data, then give specific, actionable recommendations\n- Answer work-related questions concisely\n\nRules:\n- Always reply in English, unless the user explicitly asks for Chinese output\n- For translation requests, output only the clean translated text — no preamble\n- Be concise and practical';
         })(),
         messages: aiHistory
       })
@@ -5138,11 +5185,8 @@ async function aiQuickAction(type) {
     aiAppendMsg('user', `[Translate to Chinese] ${text}`);
     inp.value = '';
     await aiCall(`Please translate the following to natural, fluent Chinese. Output only the translation:\n\n${text}`);
-  } else if (type === 'summarize_log' || type === 'standup') {
+  } else if (type === 'summarize_log' || type === 'standup' || type === 'efficiency') {
     aiOpenDateModal(type);
-  } else if (type === 'email') {
-    aiSetInput('Please help me write a professional email:\nContext: \nTone: \nKey points to include: ');
-    document.getElementById('ai-input').focus();
   }
 }
 
@@ -5226,7 +5270,7 @@ let aiPendingAction = null; // 'summarize_tasks' or 'standup'
 
 function aiOpenDateModal(action) {
   aiPendingAction = action;
-  const titleMap = { summarize_log: 'Focus Log Summary', standup: 'Weekly Standup' };
+  const titleMap = { summarize_log: 'Focus Log Summary', standup: 'Weekly Standup', efficiency: 'Efficiency Review' };
   document.getElementById('ai-date-modal-title').textContent = titleMap[action] || 'Select Date Range';
   // Default to this week
   aiSetPreset('this_week');
@@ -5422,7 +5466,162 @@ ${dayLines}`;
       : '- None';
 
     await aiCall(`Based on the following work data for ${rangeLabel}, generate a concise professional weekly standup. Use the Pomodoro session notes and day-by-day log to describe what was actually worked on — be specific, not generic. If session notes mention specific activities (e.g. "client call", "architecture review"), include them.\n\nFormat:\n\n**Weekly Standup – ${rangeLabel}**\n\n**This Week:**\n- **Project Name** (Xh): specific activities\n\n**Blockers:**\n- **Project Name**: blocker description\n\nRules:\n- This Week: use ONLY the exact task names from the Pomodoro log - do NOT invent new category names; sessions with no task name go under Others; include hours, be specific about activities\n- Blockers: format each as "**Project Name**: description — Owner Name"; the raw data already contains "— Owner Name" at the end of each line, copy it exactly as-is; do NOT omit the owner\n- If no blockers, write "- None"\n\nTask data:\n${taskCtx}\n\nFocus log:\n${logCtx}\n\nCurrent blockers (use exactly, reformat to **Project Name**: description):\n${blockerCtx}`);
+
+  } else if (action === 'efficiency') {
+    const ctx = aiBuildEfficiencyContext(from, to, rangeLabel);
+    aiAppendMsg('user', `Efficiency Review · ${rangeLabel}`);
+
+    if (!ctx) {
+      aiAppendMsg('assistant', `Not enough data for ${rangeLabel} yet — log some Pomodoro sessions or plan a few daily tasks, then try again.`);
+      return;
+    }
+
+    await aiCall(`You are analyzing ${(localStorage.getItem('jhtt_username') || 'the user').split(' ')[0]}'s productivity data for ${rangeLabel}. Produce an honest, specific efficiency review. Base every claim on the numbers below — do not invent tasks or figures. Where the data is thin, say so rather than guessing.
+
+Return EXACTLY this format (keep the section headers verbatim, each item on its own "- " line):
+
+**Efficiency Review – ${rangeLabel}**
+
+**Score:** <one line: a rating out of 10 plus a 6-12 word verdict>
+
+**Metrics:**
+- <3-6 lines: the numbers that matter - weekday focus time, active workdays, avg focus per active workday, avg session length, planned vs completed daily items, context-switching, weekend work if any. Quote real figures.>
+
+**What's Working:**
+- <1-3 concrete strengths visible in the data>
+
+**Bottlenecks:**
+- <1-4 specific problems: e.g. low-focus workdays, over-fragmented days, weekend work bleeding in, stalled in-review work, unresolved blockers. Name the task or day.>
+
+**Recommendations:**
+- <2-4 specific, actionable changes for next week. Each tied to a bottleneck above. No generic advice like "stay focused" - say what to do differently, e.g. "Batch X and Y into one block on Tue AM", "Protect Fri afternoon for review work".>
+
+Reading the data:
+- Weekends are non-working days. NOT working on a weekend is correct and healthy - never list it as a bottleneck, and judge activity only against the workday count given. If there IS weekend focus time logged, treat it as a boundary / overwork problem in Bottlenecks, not an achievement.
+- Do NOT analyze time estimates or estimate accuracy - that data is not provided. PLAN VS DELIVERED only tells you how many planned daily items got done.
+
+Data:
+${ctx}`, { maxTokens: 1600 });
   }
+}
+
+// Build a rich, numbers-first snapshot of a period for the AI to analyze.
+// Returns null when there is essentially nothing to review.
+function aiBuildEfficiencyContext(from, to, rangeLabel) {
+  const sessions = (pomoLog || []).filter(e => {
+    const d = new Date(e.ts);
+    return d >= from && d <= to && e.type === 'focus';
+  });
+  const dItems = (typeof dailyItems !== 'undefined' ? dailyItems : []).filter(i => {
+    if (!i.date) return false;
+    const d = parseDate(i.date); d.setHours(12, 0, 0, 0);
+    return d >= from && d <= to;
+  });
+  if (sessions.length === 0 && dItems.length === 0) return null;
+
+  const dayKey = d => new Date(d).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  const fmtH = mins => `${Math.floor(mins / 60)}h ${mins % 60}m`;
+
+  const isWeekend = d => { const wd = new Date(d).getDay(); return wd === 0 || wd === 6; };
+
+  const totalMins = sessions.reduce((s, e) => s + (e.mins || 0), 0);
+  const byDay = {};
+  sessions.forEach(e => {
+    const k = dayKey(e.ts);
+    if (!byDay[k]) byDay[k] = { mins: 0, count: 0, tasks: new Set(), weekend: isWeekend(e.ts) };
+    byDay[k].mins += (e.mins || 0);
+    byDay[k].count += 1;
+    byDay[k].tasks.add(e.taskName || 'Others');
+  });
+  const dayEntries = Object.entries(byDay);
+  const workdayEntries = dayEntries.filter(([, v]) => !v.weekend);
+  const weekendEntries = dayEntries.filter(([, v]) => v.weekend);
+  const weekdayMins = workdayEntries.reduce((s, e) => s + e[1].mins, 0);
+  const weekendMins = weekendEntries.reduce((s, e) => s + e[1].mins, 0);
+  const activeWorkdays = workdayEntries.length;
+
+  const spanDays = Math.max(1, Math.round((to - from) / 86400000) + 1);
+  let workdays = 0;
+  for (let t = new Date(from); t <= to; t.setDate(t.getDate() + 1)) {
+    if (!isWeekend(t)) workdays++;
+  }
+  workdays = Math.max(1, workdays);
+
+  const avgPerActiveWorkday = activeWorkdays ? Math.round(weekdayMins / activeWorkdays) : 0;
+  const avgSession = sessions.length ? Math.round(totalMins / sessions.length) : 0;
+
+  let bestDay = null, worstDay = null;
+  workdayEntries.forEach(entry => {
+    if (!bestDay || entry[1].mins > bestDay[1].mins) bestDay = entry;
+    if (!worstDay || entry[1].mins < worstDay[1].mins) worstDay = entry;
+  });
+
+  const byTask = {};
+  sessions.forEach(e => { const k = e.taskName || 'Others'; byTask[k] = (byTask[k] || 0) + (e.mins || 0); });
+  const taskLines = Object.entries(byTask).sort((a, b) => b[1] - a[1])
+    .map(([k, v]) => `  - ${k}: ${fmtH(v)} (${totalMins ? Math.round(v / totalMins * 100) : 0}%)`).join('\n');
+
+  const switchLines = dayEntries.map(([k, v]) =>
+    `  - ${k}${v.weekend ? ' [weekend]' : ''}: ${fmtH(v.mins)}, ${v.count} session${v.count > 1 ? 's' : ''}, ${v.tasks.size} distinct task${v.tasks.size > 1 ? 's' : ''}`).join('\n');
+  const avgTasksPerDay = activeWorkdays
+    ? (workdayEntries.reduce((s, e) => s + e[1].tasks.size, 0) / activeWorkdays).toFixed(1) : '0';
+
+  let weekendLine = 'none logged — weekends kept clear';
+  if (weekendMins > 0) {
+    weekendLine = `${fmtH(weekendMins)} logged on ${weekendEntries.length} weekend day(s): ${weekendEntries.map(e => e[0]).join(', ')}`;
+  }
+
+  const planned = dItems.length;
+  const completed = dItems.filter(i => i.done).length;
+  let planLine = `${completed}/${planned} planned daily items completed`;
+  if (planned) planLine += ` (${Math.round(completed / planned * 100)}%)`;
+
+  const ip = (tasks || []).filter(t => t.status === 'in-progress');
+  const review = (tasks || []).filter(t => t.status === 'in-review');
+  const doneInRange = (tasks || []).filter(t => {
+    if (t.status !== 'done') return false;
+    const d = t.date ? parseDate(t.date) : (t.due ? parseDate(t.due) : null);
+    return d && d >= from && d <= to;
+  });
+
+  const activeBlockers = (typeof blockers !== 'undefined' ? blockers : []).filter(b => !b.resolved);
+  const notes = sessions.filter(e => e.note && e.note.trim())
+    .map(e => `  - ${e.taskName || 'Others'} (${e.mins}m): "${e.note.trim()}"`).slice(0, 30).join('\n');
+
+  return `Range: ${rangeLabel} (${spanDays} calendar days)
+
+FOCUS TIME (weekends are non-working days — judge activity against workdays only)
+- Total logged: ${fmtH(totalMins)} across ${sessions.length} sessions
+- Weekday focus: ${fmtH(weekdayMins)}
+- Active workdays: ${activeWorkdays} of ${workdays} (Mon–Fri in range)
+- Avg per active workday: ${fmtH(avgPerActiveWorkday)}
+- Avg session length: ${avgSession}m
+- Best workday: ${bestDay ? bestDay[0] + ' (' + fmtH(bestDay[1].mins) + ')' : 'n/a'}
+- Lowest active workday: ${worstDay ? worstDay[0] + ' (' + fmtH(worstDay[1].mins) + ')' : 'n/a'}
+
+WEEKEND WORK (should be zero — flag as a boundary issue if not)
+- ${weekendLine}
+
+TIME BY TASK
+${taskLines || '  - none'}
+
+DAY-BY-DAY (fragmentation signal)
+${switchLines || '  - none'}
+- Avg distinct tasks per active workday: ${avgTasksPerDay}
+
+PLAN VS DELIVERED
+- ${planLine}
+
+TASK BOARD
+- Completed in range: ${doneInRange.length}${doneInRange.length ? ' — ' + doneInRange.map(t => t.name).join(', ') : ''}
+- Still in progress: ${ip.length}${ip.length ? ' — ' + ip.map(t => t.name).join(', ') : ''}
+- Sitting in review: ${review.length}${review.length ? ' — ' + review.map(t => t.name).join(', ') : ''}
+
+ACTIVE BLOCKERS
+${activeBlockers.length ? activeBlockers.map(b => `  - ${b.text}${b.taskName ? ' (' + b.taskName + ')' : ''}`).join('\n') : '  - none'}
+
+SESSION NOTES
+${notes || '  - none recorded'}`;
 }
 // ── end AI Date Range Modal ───────────────────────────────────
 

@@ -104,14 +104,18 @@ Generate standup updates directly from your work history, including:
 
 Copy the generated summary and send it directly to your team.
 
+#### Efficiency Review
+
+Pick a date range and get an AI analysis of how the period actually went — weekday focus time and active workdays, time split by task, day-by-day fragmentation, planned vs. delivered tasks, weekend-work boundary check, and stalled work — followed by a short list of specific, actionable recommendations for the week ahead.
+
 #### AI Assistant
 
 Bring your own Claude API key to enable:
 
-* Email drafting
 * English translation
 * Meeting summaries
 * Weekly standups
+* Weekly efficiency reviews and recommendations
 * Freeform chat
 
 ### ☁️ Cloud Sync *(Optional)*
