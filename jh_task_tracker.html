@@ -4961,47 +4961,67 @@ function aiRenderMarkdown(text) {
   if (text.includes('**Efficiency Review')) return aiRenderEfficiency(text);
   const isStandup = text.includes('**This Week:**');
   if (isStandup) {
-    const sections = [];
-    const lines = text.split('\n');
-    let currentSection = null;
-    let currentItems = [];
     const sectionMeta = {
-      'This Week': { icon: '✅', color: 'var(--sage2)', bg: 'rgba(61,107,80,.06)', border: 'rgba(61,107,80,.2)' },
-      'Blockers': { icon: '⛔', color: 'var(--rose)', bg: 'rgba(138,90,90,.06)', border: 'rgba(138,90,90,.2)' },
+      'This Week': { icon: '✅', color: 'var(--sage2)' },
+      'Blockers': { icon: '⛔', color: 'var(--rose)' },
     };
-    let title = '';
-    lines.forEach(line => {
+    const bold = s => s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    const sections = [];
+    let title = '', cur = null;
+
+    text.split('\n').forEach(rawLine => {
+      const line = rawLine.replace(/\r$/, '');
       const stripped = line.replace(/\*\*/g, '').trim();
+      if (!stripped) return;
       if (stripped.startsWith('Weekly Standup')) { title = stripped; return; }
       const secMatch = Object.keys(sectionMeta).find(k => stripped === k + ':' || stripped === k);
-      if (secMatch) {
-        if (currentSection) sections.push({ name: currentSection, items: currentItems });
-        currentSection = secMatch; currentItems = []; return;
+      if (secMatch) { cur = { name: secMatch, groups: [] }; sections.push(cur); return; }
+      if (!cur) return;
+      if (!/^\s*[-*]\s+/.test(line)) return;
+
+      const indented = /^\s+[-*]\s+/.test(line);
+      let content = line.replace(/^\s*[-*]\s+/, '').trim();
+      const hasBold = /\*\*.+?\*\*/.test(content);
+
+      if (cur.name === 'Blockers') {
+        if (!cur.groups.length) cur.groups.push({ header: null, points: [] });
+        cur.groups[0].points.push(bold(content));
+        return;
       }
-      if (line.trim().startsWith('- ') && currentSection) {
-        const content = line.trim().slice(2);
-        const html = content.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-        currentItems.push(html);
+      // This Week
+      if (!indented && hasBold) {
+        // new project group; split off any "…: trailing detail" onto its own bullets
+        let header = content, tail = '';
+        const ci = content.indexOf(': ');
+        if (ci > -1 && content.lastIndexOf('**', ci) > -1) { header = content.slice(0, ci).trim(); tail = content.slice(ci + 2).trim(); }
+        const g = { header: bold(header), points: [] };
+        if (tail) tail.split(/;\s+/).forEach(p => p && g.points.push(bold(p.trim())));
+        cur.groups.push(g);
+      } else {
+        if (!cur.groups.length) cur.groups.push({ header: null, points: [] });
+        cur.groups[cur.groups.length - 1].points.push(bold(content));
       }
     });
-    if (currentSection) sections.push({ name: currentSection, items: currentItems });
 
     let html = `<div style="font-family:'Lato',sans-serif">`;
     if (title) html += `<div style="font-size:13px;font-weight:700;color:var(--sage3);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)">${title}</div>`;
     sections.forEach((sec, idx) => {
       const meta = sectionMeta[sec.name] || { icon: '·', color: 'var(--muted)' };
-      if (idx > 0) html += `<div style="border-top:.5px solid var(--border);margin:10px 0"></div>`;
-      html += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">`;
+      if (idx > 0) html += `<div style="border-top:.5px solid var(--border);margin:12px 0"></div>`;
+      html += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">`;
       html += `<span style="font-size:12px">${meta.icon}</span><span style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:${meta.color}">${sec.name}</span></div>`;
-      html += `<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:2px">`;
-      if (sec.items.length === 0) {
-        html += `<span style="font-size:12px;color:var(--muted2)">None</span>`;
-      } else {
-        sec.items.forEach(item => {
-          html += `<div style="font-size:12px;color:var(--text);line-height:1.55;display:flex;gap:7px"><span style="color:${meta.color};flex-shrink:0;margin-top:1px">·</span><span>${item}</span></div>`;
+
+      const groups = sec.groups.filter(g => g.header || g.points.length);
+      if (!groups.length) { html += `<div style="font-size:12px;color:var(--muted2)">None</div>`; return; }
+
+      groups.forEach((g, gi) => {
+        if (g.header) {
+          html += `<div style="font-size:12px;font-weight:700;color:var(--text);margin:${gi > 0 ? '12px' : '0'} 0 6px">${g.header}</div>`;
+        }
+        g.points.forEach(p => {
+          html += `<div style="font-size:12px;color:var(--text);line-height:1.55;display:flex;gap:7px;margin:0 0 4px ${g.header ? '4px' : '0'}"><span style="color:${meta.color};flex-shrink:0;margin-top:1px">·</span><span>${p}</span></div>`;
         });
-      }
-      html += `</div>`;
+      });
     });
     html += `</div>`;
     return { html, isHtml: true };
@@ -5465,7 +5485,7 @@ ${dayLines}`;
       ? activeBlockers.map(b => `- ${b.text}${b.taskName ? ` (${b.taskName})` : ''}${b.owner ? ` — ${b.owner}` : ''}`).join('\n')
       : '- None';
 
-    await aiCall(`Based on the following work data for ${rangeLabel}, generate a concise professional weekly standup. Use the Pomodoro session notes and day-by-day log to describe what was actually worked on — be specific, not generic. If session notes mention specific activities (e.g. "client call", "architecture review"), include them.\n\nFormat:\n\n**Weekly Standup – ${rangeLabel}**\n\n**This Week:**\n- **Project Name** (Xh): specific activities\n\n**Blockers:**\n- **Project Name**: blocker description\n\nRules:\n- This Week: use ONLY the exact task names from the Pomodoro log - do NOT invent new category names; sessions with no task name go under Others; include hours, be specific about activities\n- Blockers: format each as "**Project Name**: description — Owner Name"; the raw data already contains "— Owner Name" at the end of each line, copy it exactly as-is; do NOT omit the owner\n- If no blockers, write "- None"\n\nTask data:\n${taskCtx}\n\nFocus log:\n${logCtx}\n\nCurrent blockers (use exactly, reformat to **Project Name**: description):\n${blockerCtx}`);
+    await aiCall(`Based on the following work data for ${rangeLabel}, generate a concise professional weekly standup. Use the Pomodoro session notes and day-by-day log to describe what was actually worked on — be specific, not generic.\n\nFormat:\n\n**Weekly Standup – ${rangeLabel}**\n\n**This Week:**\n- **Project Name** (Xh Ym)\n  - activity\n  - next activity\n- **Another Project** (Xh Ym)\n  - activity\n\n**Blockers:**\n- **Project Name**: blocker description — Owner Name\n\nRules:\n- One project per group. Put the project name and total time on its own line as "- **Project Name** (Xh Ym)", then list 2–5 short activity bullets indented under it with two spaces + "- ".\n- Order the activity bullets within each project chronologically, earliest first, using the day-by-day log.\n- Each activity bullet is a phrase, not a sentence. Pull specifics from the session notes.\n- Use ONLY the exact task names from the Pomodoro log as project names — do NOT invent new names; sessions with no task name go under "Others".\n- Blockers: format each as "**Project Name**: description — Owner Name"; the raw data already contains "— Owner Name" at the end of each line, copy it exactly as-is; do NOT omit the owner.\n- If no blockers, write "- None".\n\nTask data:\n${taskCtx}\n\nFocus log:\n${logCtx}\n\nCurrent blockers (use exactly, reformat to **Project Name**: description):\n${blockerCtx}`);
 
   } else if (action === 'efficiency') {
     const ctx = aiBuildEfficiencyContext(from, to, rangeLabel);
