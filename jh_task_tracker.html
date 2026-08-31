@@ -7008,7 +7008,9 @@ function dailyRender() {
     }
     const doneItems = dailyItems.filter(i => i.date === today && i.done);
     const tdOpen = localStorage.getItem('daily_today_open') !== '0';
-    html += `<div class="daily-group-header" style="cursor:pointer" ondragover="event.preventDefault();if(typeof _blockerDragId!=='undefined'&&_blockerDragId)event.dataTransfer.dropEffect='none'" ondrop="if(typeof _blockerDragId==='undefined'||!_blockerDragId)dailyDropToToday(event);else event.preventDefault()" onclick="dailyToggleTodayList()"><span class="daily-group-label" style="color:var(--sage2)">TODAY · ${todayItems.length}</span><div class="daily-group-line"></div><span style="font-size:11px;color:var(--muted2);flex-shrink:0">${tdOpen ? '▴ hide' : '▾ show'}</span></div>`;
+    const todayEstTotal = todayItems.reduce((s, i) => s + (i.estMins || 0), 0);
+    const todayEstLabel = todayEstTotal ? (todayEstTotal < 60 ? todayEstTotal + 'm' : Math.floor(todayEstTotal/60) + 'h' + (todayEstTotal%60 ? ' ' + (todayEstTotal%60) + 'm' : '')) : '';
+    html += `<div class="daily-group-header" style="cursor:pointer" ondragover="event.preventDefault();if(typeof _blockerDragId!=='undefined'&&_blockerDragId)event.dataTransfer.dropEffect='none'" ondrop="if(typeof _blockerDragId==='undefined'||!_blockerDragId)dailyDropToToday(event);else event.preventDefault()" onclick="dailyToggleTodayList()"><span class="daily-group-label" style="color:var(--sage2)">TODAY · ${todayItems.length}</span><div class="daily-group-line"></div>${todayEstLabel ? `<span style="font-size:11px;color:var(--sage2);flex-shrink:0" title="Estimated time for today's remaining tasks">${todayEstLabel}</span>` : ''}<span style="font-size:11px;color:var(--muted2);flex-shrink:0">${tdOpen ? '▴ hide' : '▾ show'}</span></div>`;
     if (!tdOpen) {
       // collapsed — no body
     } else if (todayItems.length === 0) {
@@ -7066,12 +7068,7 @@ function dailyRender() {
   if (pill) {
     const pct = totalCount > 0 ? Math.round(doneCount / totalCount * 100) : 0;
     const barColor = pct === 100 ? 'var(--mint2)' : 'var(--sage)';
-    const estTotalMins = todayItems.reduce((s, i) => s + (i.estMins || 0), 0);
-    const estHtml = estTotalMins > 0 ? (() => {
-      const eh = Math.floor(estTotalMins / 60), em = estTotalMins % 60;
-      return `<span style="opacity:.4;margin:0 2px">·</span><span title="Estimated time for today's remaining tasks">Est ${eh}h ${String(em).padStart(2,'0')}m</span>`;
-    })() : '';
-    pill.innerHTML = `<span style="font-weight:700;color:var(--text2)">${doneCount}/${totalCount}</span><div style="width:48px;height:2px;background:var(--surface3);border-radius:999px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${barColor};border-radius:999px"></div></div><span>${focusHours}</span>${estHtml}`;
+    pill.innerHTML = `<span style="font-weight:700;color:var(--text2)">${doneCount}/${totalCount}</span><div style="width:48px;height:2px;background:var(--surface3);border-radius:999px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${barColor};border-radius:999px"></div></div><span>${focusHours}</span>`;
   }
 
   const backlogPanel = document.getElementById('daily-panel-backlog');
