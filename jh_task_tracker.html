@@ -1444,7 +1444,7 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
 <div class="modal-overlay" id="manual-entry-modal">
   <div class="modal manual-entry-form">
     <div class="modal-header">
-      <div class="modal-title">Log Hours Manually</div>
+      <div class="modal-title" id="me-modal-title">Log Hours Manually</div>
       <button class="modal-close" onclick="closeManualEntry()">✕</button>
     </div>
     <div class="form-group">
@@ -3930,29 +3930,8 @@ function pomoRenderLog() {
         <div class="pomo-log-task">${e.taskName || 'Others'}${manualTag}</div>
         <div class="pomo-log-meta">${date} · ${time}${e.type === 'focus' && e.mins ? ' · ' + e.mins + 'min' : ''}</div>
         ${noteTag}
-        <div id="plog-edit-${e.id}" style="display:none;margin-top:6px;display:none">
-          <div style="display:flex;align-items:center;gap:6px">
-            <div style="position:relative;flex:0 1 80%;min-width:0">
-              <input type="text" id="plog-input-${e.id}" value="${e.note || ''}" maxlength="80"
-                placeholder="Add a note…"
-                style="width:100%;padding:5px 70px 5px 9px;font-size:12px;border:1.5px solid var(--sage);border-radius:7px;font-family:'Lato',sans-serif;color:var(--text);outline:none;box-sizing:border-box"
-                onkeydown="if(event.key==='Enter')pomoSaveNote(${e.id});if(event.key==='Escape')pomoCancelEdit(${e.id})">
-              <button type="button" data-lang="en" oncontextmenu="event.preventDefault();toggleTranslateLang(this)" onclick="inlineTranslate('plog-input-${e.id}', this)" title="Translate to English"
-                style="position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:11px;padding:2px 7px;border-radius:5px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;font-family:'Lato',sans-serif;transition:all .15s"
-                onmouseover="this.style.borderColor='var(--sage)';this.style.color='var(--sage2)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">🌐 EN</button>
-            </div>
-            <input type="number" id="plog-mins-${e.id}" value="${e.mins || ''}" min="1" max="999"
-              style="width:48px;padding:5px 6px;font-size:12px;border:1.5px solid var(--sage);border-radius:7px;font-family:'Lato',sans-serif;color:var(--text);outline:none;box-sizing:border-box;text-align:center;flex-shrink:0"
-              onkeydown="if(event.key==='Enter')pomoSaveNote(${e.id});if(event.key==='Escape')pomoCancelEdit(${e.id})">
-            <span style="font-size:12px;color:var(--muted2);flex-shrink:0">min</span>
-          </div>
-          <div style="display:flex;gap:6px;margin-top:5px">
-            <button onclick="pomoSaveNote(${e.id})" class="btn btn-primary" style="font-size:11px;padding:4px 10px">Save</button>
-            <button onclick="pomoCancelEdit(${e.id})" class="btn" style="font-size:11px;padding:4px 10px">Cancel</button>
-          </div>
-        </div>
       </div>
-      <button onclick="pomoEditNote(${e.id})" title="Edit note" style="width:22px;height:22px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">✎</button>
+      <button onclick="pomoEditEntry(${e.id})" title="Edit session" style="width:22px;height:22px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">✎</button>
       <button onclick="pomoDeleteEntry(${e.id})" title="Delete" style="width:22px;height:22px;border-radius:50%;border:1px solid rgba(138,90,90,.25);background:rgba(138,90,90,.06);color:var(--rose);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;line-height:1" onmouseover="this.style.background='rgba(138,90,90,.18)'" onmouseout="this.style.background='rgba(138,90,90,.06)'">✕</button>
     </div>`;
   }).join('');
@@ -3967,39 +3946,19 @@ async function pomoDeleteEntry(id) {
   showToast('Entry removed');
 }
 
-function pomoEditNote(id) {
-  const editDiv = document.getElementById(`plog-edit-${id}`);
-  const noteDiv = document.getElementById(`plog-note-${id}`);
-  if (!editDiv) return;
-  editDiv.style.display = 'block';
-  if (noteDiv) noteDiv.style.display = 'none';
-  const inp = document.getElementById(`plog-input-${id}`);
-  if (inp) { inp.focus(); inp.select(); }
-}
-
-function pomoSaveNote(id) {
-  const inp = document.getElementById(`plog-input-${id}`);
-  const minsInp = document.getElementById(`plog-mins-${id}`);
-  if (!inp) return;
-  const note = inp.value.trim();
+// Edit an existing session entry via the same modal used for manual logging.
+function pomoEditEntry(id) {
   const entry = pomoLog.find(e => e.id === id);
-  if (entry) {
-    entry.note = note;
-    if (minsInp && minsInp.value) {
-      const newMins = Math.max(1, Math.round(Number(minsInp.value)));
-      if (!isNaN(newMins)) entry.mins = newMins;
-    }
-    localStorage.setItem(POMO_LOG_KEY, JSON.stringify(pomoLog));
-  }
-  pomoRenderLog(); pomoRenderStats();
-  showToast('Saved');
-}
-
-function pomoCancelEdit(id) {
-  const editDiv = document.getElementById(`plog-edit-${id}`);
-  const noteDiv = document.getElementById(`plog-note-${id}`);
-  if (editDiv) editDiv.style.display = 'none';
-  if (noteDiv) noteDiv.style.display = 'block';
+  if (!entry) return;
+  const d = new Date(entry.ts);
+  openManualEntry({
+    editId: id,
+    taskId: entry.taskId != null ? entry.taskId : null,
+    note: entry.note || '',
+    mins: entry.mins || 60,
+    date: d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'),
+    time: String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0')
+  });
 }
 
 function pomoRenderNoteChips() {
@@ -4625,14 +4584,19 @@ function pomoInit() {
 
 // ── Manual Entry
 let _meDailyItemId = null;
-// prefill (optional): { taskId, note, mins, date, itemId } — used when jumping in from
-// the Daily List so the task, estimate, and text carry over instead of a blank form.
+let _meEditId = null;
+// prefill (optional): { taskId, note, mins, date, time, itemId, editId } — used when jumping
+// in from the Daily List (task/estimate/text carry over) or when editing an existing session
+// log entry (editId set, so Save updates that entry instead of creating a new one).
 // itemId links back to the originating daily item so "mark as done" can update it.
 function openManualEntry(prefill) {
   const today = new Date().toISOString().split('T')[0];
   const nowTime = new Date().toTimeString().slice(0,5);
+  _meEditId = (prefill && prefill.editId != null) ? prefill.editId : null;
+  const titleEl = document.getElementById('me-modal-title');
+  if (titleEl) titleEl.textContent = _meEditId != null ? 'Edit Session' : 'Log Hours Manually';
   document.getElementById('me-date').value = (prefill && prefill.date) || today;
-  document.getElementById('me-time').value = nowTime;
+  document.getElementById('me-time').value = (prefill && prefill.time) || nowTime;
   document.getElementById('me-mins').value = (prefill && prefill.mins) || 60;
   document.getElementById('me-note').value = (prefill && prefill.note) || '';
   // populate task select
@@ -4679,6 +4643,7 @@ function closeManualEntry() {
   document.getElementById('manual-entry-modal').classList.remove('open');
   meCloseChips();
   _meDailyItemId = null;
+  _meEditId = null;
 }
 
 function meRenderNoteChips() {
@@ -4755,6 +4720,23 @@ function saveManualEntry() {
 
   const taskName = taskId ? (tasks.find(t => t.id === taskId) || {}).name || 'Others' : 'Others';
   const tsStr = dateVal + 'T' + (timeVal || '09:00') + ':00';
+
+  if (_meEditId != null) {
+    const entry = pomoLog.find(e => e.id === _meEditId);
+    if (entry) {
+      entry.mins = minsRaw;
+      entry.taskId = taskId;
+      entry.taskName = taskName;
+      entry.note = note || '';
+      entry.ts = new Date(tsStr).toISOString();
+      localStorage.setItem(POMO_LOG_KEY, JSON.stringify(pomoLog));
+    }
+    pomoRenderLog(); pomoRenderStats(); updatePomoNavBadge();
+    closeManualEntry();
+    showToast('✅ Session updated');
+    return;
+  }
+
   const entry = {
     id: Date.now(),
     type: 'focus',
