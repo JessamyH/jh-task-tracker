@@ -6424,6 +6424,18 @@ function dailyToggleTomorrow() {
   dailyRender();
 }
 
+function dailyToggleOverdue() {
+  const open = localStorage.getItem('daily_overdue_open') !== '0';
+  localStorage.setItem('daily_overdue_open', open ? '0' : '1');
+  dailyRender();
+}
+
+function dailyToggleTodayList() {
+  const open = localStorage.getItem('daily_today_open') !== '0';
+  localStorage.setItem('daily_today_open', open ? '0' : '1');
+  dailyRender();
+}
+
 function dailyPlanTomorrow() {
   _dailyAddDate = 'tomorrow';
   localStorage.setItem('daily_tomorrow_open', '1');
@@ -6986,14 +6998,20 @@ function dailyRender() {
   const main = document.getElementById('daily-main');
   if (main) {
     let html = '';
+    const odOpen = localStorage.getItem('daily_overdue_open') !== '0';
     if (rollovers.length > 0) {
-      html += `<div class="daily-group-header" ondragover="event.preventDefault();if(typeof _blockerDragId!=='undefined'&&_blockerDragId)event.dataTransfer.dropEffect='none'" ondrop="if(typeof _blockerDragId==='undefined'||!_blockerDragId)dailyDropToToday(event);else event.preventDefault()"><span class="daily-group-label" style="color:var(--rose)">OVERDUE · ${rollovers.length}</span><div class="daily-group-line"></div></div>`;
-      html += `<div style="font-size:11px;color:var(--rose);margin-bottom:6px;padding-left:2px">Drag items to TODAY ↓ to reschedule</div>`;
-      html += `<div style="display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto;padding-right:4px" class="scroll-hide">${rollovers.map(i => renderItem(i, true)).join('')}</div>`;
+      html += `<div class="daily-group-header" style="cursor:pointer" ondragover="event.preventDefault();if(typeof _blockerDragId!=='undefined'&&_blockerDragId)event.dataTransfer.dropEffect='none'" ondrop="if(typeof _blockerDragId==='undefined'||!_blockerDragId)dailyDropToToday(event);else event.preventDefault()" onclick="dailyToggleOverdue()"><span class="daily-group-label" style="color:var(--rose)">OVERDUE · ${rollovers.length}</span><div class="daily-group-line"></div><span style="font-size:11px;color:var(--muted2);flex-shrink:0">${odOpen ? '▴ hide' : '▾ show'}</span></div>`;
+      if (odOpen) {
+        html += `<div style="font-size:11px;color:var(--rose);margin-bottom:6px;padding-left:2px">Drag items to TODAY ↓ to reschedule</div>`;
+        html += `<div style="display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto;padding-right:4px" class="scroll-hide">${rollovers.map(i => renderItem(i, true)).join('')}</div>`;
+      }
     }
     const doneItems = dailyItems.filter(i => i.date === today && i.done);
-    html += `<div class="daily-group-header" ondragover="event.preventDefault();if(typeof _blockerDragId!=='undefined'&&_blockerDragId)event.dataTransfer.dropEffect='none'" ondrop="if(typeof _blockerDragId==='undefined'||!_blockerDragId)dailyDropToToday(event);else event.preventDefault()"><span class="daily-group-label" style="color:var(--sage2)">TODAY · ${todayItems.length}</span><div class="daily-group-line"></div></div>`;
-    if (todayItems.length === 0) {
+    const tdOpen = localStorage.getItem('daily_today_open') !== '0';
+    html += `<div class="daily-group-header" style="cursor:pointer" ondragover="event.preventDefault();if(typeof _blockerDragId!=='undefined'&&_blockerDragId)event.dataTransfer.dropEffect='none'" ondrop="if(typeof _blockerDragId==='undefined'||!_blockerDragId)dailyDropToToday(event);else event.preventDefault()" onclick="dailyToggleTodayList()"><span class="daily-group-label" style="color:var(--sage2)">TODAY · ${todayItems.length}</span><div class="daily-group-line"></div><span style="font-size:11px;color:var(--muted2);flex-shrink:0">${tdOpen ? '▴ hide' : '▾ show'}</span></div>`;
+    if (!tdOpen) {
+      // collapsed — no body
+    } else if (todayItems.length === 0) {
       if (doneItems.length > 0 && rollovers.length === 0) {
         html += `<div style="text-align:center;padding:18px 0 14px;color:var(--muted2);font-size:13px" ondragover="event.preventDefault();if(typeof _blockerDragId!=='undefined'&&_blockerDragId)event.dataTransfer.dropEffect='none'" ondrop="if(typeof _blockerDragId==='undefined'||!_blockerDragId)dailyDropToToday(event);else event.preventDefault()"><span style="opacity:.5;color:var(--sage);vertical-align:middle;margin-right:4px">✓</span><span style="vertical-align:middle">All done for today — go rest up · <span onclick="dailyPlanTomorrow()" style="color:var(--sky);cursor:pointer;text-decoration:underline;text-underline-offset:2px">plan tomorrow →</span></span></div>`;
       } else {
