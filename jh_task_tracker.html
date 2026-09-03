@@ -497,6 +497,49 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
 .wr-hm-tip{display:none;position:absolute;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%);background:var(--forest);color:#d8ecd8;font-size:10px;padding:3px 7px;border-radius:6px;white-space:nowrap;z-index:10;pointer-events:none}
 .wr-hm-labels{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:6px;margin-bottom:0}
 .wr-hm-lbl{font-size:10px;color:var(--muted2);text-align:center;font-family:'DM Mono',monospace}
+.tl-week-head{display:flex}
+.tl-week-head-spacer{width:52px;flex-shrink:0}
+.tl-week-day-head{flex:1;min-width:0;text-align:center;padding:2px 2px 8px;border-bottom:1px solid var(--border)}
+.tl-week-day-head.today .tl-wdh-num{color:var(--sage2);font-weight:700}
+.tl-wdh-dow{font-size:9.5px;font-weight:700;letter-spacing:.06em;color:var(--muted2);text-transform:uppercase}
+.tl-wdh-num{font-size:13px;font-family:'DM Mono',monospace;color:var(--text2);font-weight:600;margin-top:1px}
+.tl-wdh-mins{font-size:10px;color:var(--muted2);margin-top:2px}
+.tl-body{position:relative;display:flex;gap:0;max-height:calc(100vh - 350px);min-height:240px;overflow-y:auto;padding-top:8px}
+.tl-hours{width:52px;flex-shrink:0;position:relative}
+.tl-hour-lbl{position:absolute;left:0;right:8px;text-align:right;font-size:10px;font-family:'DM Mono',monospace;color:var(--muted2);transform:translateY(-6px)}
+.tl-week-grid{position:relative;flex:1;display:flex;min-width:0}
+.tl-grid-lines{position:absolute;inset:0}
+.tl-day-col{position:relative;flex:1;min-width:0;border-left:1px solid var(--border)}
+.tl-gridline{position:absolute;left:0;right:0;border-top:1px solid var(--border);opacity:.6}
+.tl-now-line{position:absolute;left:0;right:0;border-top:1.5px dashed var(--rose);z-index:3}
+.tl-now-dot{position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:50%;background:var(--rose)}
+.tl-block{position:absolute;left:2px;right:2px;border-radius:6px;padding:2px 5px;overflow:hidden;cursor:default;box-sizing:border-box;border-width:1px;border-style:solid;transition:filter .12s}
+.tl-block:hover{filter:brightness(0.97)}
+.tl-block-name{font-size:10.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}
+.tl-empty{padding:40px 10px;text-align:center;color:var(--muted2);font-size:12.5px}
+.tl-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.tl-legend-chip{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text2);background:var(--surface2);border:1px solid var(--border);border-radius:999px;padding:4px 10px 4px 8px}
+.tl-legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.tl-legend-val{color:var(--muted2);font-family:'DM Mono',monospace;font-size:10.5px}
+.tl-date-input{border:1.5px solid var(--border2);background:var(--surface);color:var(--text);border-radius:8px;padding:5px 9px;font-size:12px;font-family:'Lato',sans-serif;cursor:pointer}
+.tl-week-btn{border:1.5px solid var(--border2);background:var(--surface);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:11.5px;font-weight:700;cursor:pointer;transition:all .14s}
+.tl-week-btn:hover{border-color:var(--sage);color:var(--sage2)}
+.tl-block.tc-0{background:rgba(122,95,168,.16);border-color:rgba(122,95,168,.35);color:#7a5fa8}
+.tl-block.tc-1{background:rgba(74,122,181,.16);border-color:rgba(74,122,181,.35);color:#4a7ab5}
+.tl-block.tc-2{background:rgba(58,138,138,.16);border-color:rgba(58,138,138,.35);color:#3a8a8a}
+.tl-block.tc-3{background:rgba(160,90,138,.16);border-color:rgba(160,90,138,.35);color:#a05a8a}
+.tl-block.tc-4{background:rgba(61,107,80,.16);border-color:rgba(61,107,80,.35);color:#3d6b50}
+.tl-block.tc-5{background:rgba(184,134,11,.16);border-color:rgba(184,134,11,.35);color:#b8860b}
+.tl-block.tc-6{background:rgba(138,90,90,.16);border-color:rgba(138,90,90,.35);color:#8a5a5a}
+.tl-block.tc-7{background:rgba(90,110,130,.16);border-color:rgba(90,110,130,.35);color:#5a6e82}
+.tl-legend-dot.tc-0{background:#7a5fa8}
+.tl-legend-dot.tc-1{background:#4a7ab5}
+.tl-legend-dot.tc-2{background:#3a8a8a}
+.tl-legend-dot.tc-3{background:#a05a8a}
+.tl-legend-dot.tc-4{background:#3d6b50}
+.tl-legend-dot.tc-5{background:#b8860b}
+.tl-legend-dot.tc-6{background:#8a5a5a}
+.tl-legend-dot.tc-7{background:#5a6e82}
 .wr-task-table{width:100%;border-collapse:collapse}
 .wr-task-table th{font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;padding:0 0 9px;text-align:left;border-bottom:1px solid var(--border)}
 .wr-task-table td{font-size:12px;color:var(--text);padding:9px 0 8px;border-bottom:1px solid var(--surface2);vertical-align:middle}
@@ -637,7 +680,8 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
     <button class="nav-item" onclick="setView('ideas',this)" id="nav-ideas"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1.3.5 2.6 1.5 3.5.8.8 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span> Ideas</button>
     <div class="nav-section">Focus</div>
     <button class="nav-item" onclick="setView('pomodoro',this)" id="nav-pomodoro"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></svg></span> Pomodoro</button>
-    <button class="nav-item" onclick="setView('weekly',this)" id="nav-weekly"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg></span> Weekly Report</button>
+    <button class="nav-item" onclick="setView('timeline',this)" id="nav-timeline"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg></span> Timeline</button>
+    <button class="nav-item" onclick="setView('weekly',this)" id="nav-weekly"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg></span> Report</button>
     <div class="nav-section">AI</div>
     <button class="nav-item" onclick="setView('ai',this)" id="nav-ai"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg></span> AI Assistant</button>
     <button class="nav-item" onclick="setView('meeting',this)" id="nav-meeting"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg></span> Meeting</button>
@@ -791,7 +835,7 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
       </div>
     </div>
 
-    <!-- Weekly Report -->
+    <!-- Report (weekly) -->
     <div id="view-weekly" style="display:none">
       <div class="wr-top">
         <div class="wr-week-nav">
@@ -834,6 +878,27 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
             <div id="wr-done-list" style="display:flex;flex-direction:column;gap:8px;overflow-y:auto;flex:1"></div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Timeline (read-only view of how a week's logged time is distributed by day/hour) -->
+    <div id="view-timeline" style="display:none">
+      <div class="wr-top">
+        <div class="wr-week-nav">
+          <button class="wr-week-btn" onclick="tlPrevWeek()">&#8249;</button>
+          <div class="wr-week-label" id="tl-week-label">This week</div>
+          <button class="wr-week-btn" onclick="tlNextWeek()">&#8250;</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="tl-week-btn" onclick="tlGoThisWeek()">This week</button>
+          <input type="date" class="tl-date-input" id="tl-date-input" aria-label="Jump to a date's week" onchange="tlJumpToDate(this.value)">
+        </div>
+      </div>
+      <div class="wr-card">
+        <div class="wr-card-title"><span>Time Distribution</span><span id="tl-total" style="font-weight:400;letter-spacing:0;text-transform:none;color:var(--muted2)"></span></div>
+        <div id="tl-week-head" class="tl-week-head"></div>
+        <div id="tl-body" class="tl-body"></div>
+        <div id="tl-legend" class="tl-legend"></div>
       </div>
     </div>
 
@@ -2000,7 +2065,7 @@ function render() {
 }
 
 // ── View switching
-const viewTitles = {dashboard:'Dashboard', kanban:'Projects', daily:'Daily List', pomodoro:'Focus Timer', weekly:'Weekly Report', ai:'AI Assistant', ideas:'Ideas', feedback:'Feedback', meeting:'Meeting Assistant'};
+const viewTitles = {dashboard:'Dashboard', kanban:'Projects', daily:'Daily List', pomodoro:'Focus Timer', weekly:'Report', timeline:'Timeline', ai:'AI Assistant', ideas:'Ideas', feedback:'Feedback', meeting:'Meeting Assistant'};
 
 // ── User Name Edit ──
 function startEditUserName() {
@@ -2069,7 +2134,7 @@ function loadUserNameAndAbout() {
 loadUserNameAndAbout();
 
 function setView(v, btn) {
-  ['dashboard','kanban','daily','pomodoro','weekly','ai','ideas','feedback','meeting'].forEach(id => {
+  ['dashboard','kanban','daily','pomodoro','weekly','timeline','ai','ideas','feedback','meeting'].forEach(id => {
     document.getElementById('view-' + id).style.display = id===v ? '' : 'none';
   });
   document.getElementById('view-title').textContent = viewTitles[v] || v;
@@ -2079,6 +2144,7 @@ function setView(v, btn) {
   if (v === 'kanban') { kanbanFilter = 'all'; setProjView(projView); const ct=document.getElementById('proj-total-count'); if(ct) ct.textContent=tasks.length+' project'+(tasks.length!==1?'s':''); }
   if (v === 'pomodoro') { pomoLinkedDailyItemId = null; pomoPopulateTaskSelect(); pomoRenderNoteChips(); pomoRenderLog(); pomoRenderStats(); pomoInitCountUpBtns(); pomoUpdateSettingsBtnState(); requestAnimationFrame(syncPomoHeight); }
   if (v === 'weekly') { wrRender(); }
+  if (v === 'timeline') { tlRender(); }
   if (v === 'daily') { backlogAutoSchedule(); routineGenerate(); dailyRender(); }
 }
 
@@ -2995,6 +3061,182 @@ function wrRenderHeatmap(start, sessions) {
     return '<div class="wr-hm-day" style="background:' + bg + '"><span class="wr-hm-tip">' + tip + '</span></div>';
   }).join('');
   if (lblEl) lblEl.innerHTML = labels.map(function(l){ return '<div class="wr-hm-lbl">' + l + '</div>'; }).join('');
+}
+
+// ── Timeline: read-only view of how a week's logged sessions are
+// distributed across the clock, one column per day, so you can see gaps,
+// overlap and day-to-day rhythm at a glance (rather than just a per-day
+// total, which Weekly Report's heatmap already shows).
+let tlWeekOffset = 0;
+const TL_DOW = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+function tlLocalDateStr(d) { return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+// Monday 00:00 (local) of the week `offset` weeks from this week.
+function tlWeekStart(offset) {
+  const now = new Date();
+  const day = now.getDay();
+  const mon = new Date(now);
+  mon.setDate(now.getDate() - ((day + 6) % 7) + offset * 7);
+  mon.setHours(0, 0, 0, 0);
+  return mon;
+}
+function tlPrevWeek() { tlWeekOffset--; tlRender(); }
+function tlNextWeek() { if (tlWeekOffset < 0) { tlWeekOffset++; tlRender(); } }
+function tlGoThisWeek() { tlWeekOffset = 0; tlRender(); }
+function tlJumpToDate(val) {
+  if (!val) return;
+  const picked = new Date(val + 'T00:00:00');
+  const curMon = tlWeekStart(0);
+  const pickDay = picked.getDay();
+  const pickMon = new Date(picked);
+  pickMon.setDate(picked.getDate() - ((pickDay + 6) % 7));
+  pickMon.setHours(0, 0, 0, 0);
+  tlWeekOffset = Math.round((pickMon - curMon) / (7 * 86400000));
+  tlRender();
+}
+function tlFmtHour(h) {
+  if (h === 0 || h === 24) return '12am';
+  if (h === 12) return '12pm';
+  return h < 12 ? h + 'am' : (h - 12) + 'pm';
+}
+// Groups a single day's sessions into clusters of mutually-overlapping intervals,
+// then greedily assigns each a column within its cluster — same approach calendar
+// UIs use to lay overlapping events side-by-side instead of stacking them illegibly.
+function tlLayout(sessions) {
+  let clusterEnd = -Infinity, cluster = [];
+  const clusters = [];
+  sessions.forEach(s => {
+    if (cluster.length && s.startMin >= clusterEnd) { clusters.push(cluster); cluster = []; clusterEnd = -Infinity; }
+    cluster.push(s);
+    clusterEnd = Math.max(clusterEnd, s.endMin);
+  });
+  if (cluster.length) clusters.push(cluster);
+  clusters.forEach(cl => {
+    const colEnds = [];
+    cl.forEach(s => {
+      let ci = colEnds.findIndex(end => end <= s.startMin);
+      if (ci === -1) { ci = colEnds.length; colEnds.push(s.endMin); } else { colEnds[ci] = s.endMin; }
+      s._col = ci;
+    });
+    cl.forEach(s => { s._colCount = colEnds.length; });
+  });
+  return sessions;
+}
+function tlRender() {
+  const labelEl = document.getElementById('tl-week-label');
+  const inputEl = document.getElementById('tl-date-input');
+  const headEl = document.getElementById('tl-week-head');
+  const bodyEl = document.getElementById('tl-body');
+  const legendEl = document.getElementById('tl-legend');
+  const totalEl = document.getElementById('tl-total');
+  if (!bodyEl) return;
+
+  const mon = tlWeekStart(tlWeekOffset);
+  const days = [];
+  for (let i = 0; i < 7; i++) { const dd = new Date(mon); dd.setDate(mon.getDate() + i); days.push(dd); }
+  const dayStrs = days.map(tlLocalDateStr);
+  const todayStr = dailyLocalDate();
+
+  if (labelEl) {
+    const prefix = tlWeekOffset === 0 ? 'This week' : tlWeekOffset === -1 ? 'Last week' : (Math.abs(tlWeekOffset) + ' weeks ago');
+    labelEl.textContent = prefix + ' · ' + wrFmtDate(days[0]) + ' – ' + wrFmtDate(days[6]);
+  }
+  if (inputEl) inputEl.value = dayStrs[0];
+
+  const localDate = ts => { const dd = new Date(ts); return dd.getFullYear() + '-' + String(dd.getMonth()+1).padStart(2,'0') + '-' + String(dd.getDate()).padStart(2,'0'); };
+  const allSessions = (pomoLog || []).filter(e => e.type === 'focus' && dayStrs.includes(localDate(e.ts)));
+
+  const totalMins = allSessions.reduce((s, e) => s + (e.mins || 0), 0);
+  if (totalEl) totalEl.textContent = allSessions.length
+    ? (Math.floor(totalMins/60) + 'h ' + (totalMins%60) + 'm across ' + allSessions.length + ' session' + (allSessions.length !== 1 ? 's' : ''))
+    : '';
+
+  // Bucket sessions per day, compute each session's minute-of-day span, and
+  // lay out same-day overlaps into side-by-side columns.
+  const byDay = dayStrs.map(ds => allSessions
+    .filter(e => localDate(e.ts) === ds)
+    .map(e => {
+      const start = new Date(e.ts);
+      const startMin = Math.max(0, start.getHours() * 60 + start.getMinutes());
+      const mins = Math.max(1, e.mins || 0);
+      return Object.assign({}, e, { startMin, endMin: Math.min(24*60, startMin + mins) });
+    })
+    .sort((a, b) => a.startMin - b.startMin));
+  byDay.forEach(tlLayout);
+  const dayMins = byDay.map(list => list.reduce((s, e) => s + e.mins, 0));
+
+  if (headEl) headEl.innerHTML = '<div class="tl-week-head-spacer"></div>' + days.map((dd, i) => {
+    const isToday = dayStrs[i] === todayStr;
+    const mins = dayMins[i];
+    const minsStr = mins ? ((Math.floor(mins/60) ? Math.floor(mins/60)+'h ' : '') + (mins%60) + 'm') : '—';
+    return '<div class="tl-week-day-head' + (isToday ? ' today' : '') + '"><div class="tl-wdh-dow">' + TL_DOW[i] + '</div><div class="tl-wdh-num">' + dd.getDate() + '</div><div class="tl-wdh-mins">' + minsStr + '</div></div>';
+  }).join('');
+
+  if (!allSessions.length) {
+    bodyEl.innerHTML = '<div class="tl-empty">No logged sessions this week</div>';
+    if (legendEl) legendEl.innerHTML = '';
+    return;
+  }
+
+  // Visible hour range: pad an hour around the week's earliest/latest session, min 4h tall
+  const flat = byDay.flat();
+  let rangeStart = Math.max(0, Math.floor(Math.min.apply(null, flat.map(s => s.startMin)) / 60) - 1) * 60;
+  let rangeEnd = Math.min(24, Math.ceil(Math.max.apply(null, flat.map(s => s.endMin)) / 60) + 1) * 60;
+  if (rangeEnd - rangeStart < 240) rangeEnd = Math.min(24*60, rangeStart + 240);
+  const pxPerMin = 1;
+  const trackHeight = (rangeEnd - rangeStart) * pxPerMin;
+
+  let hoursHtml = '', gridHtml = '';
+  for (let m = rangeStart; m <= rangeEnd; m += 60) {
+    const top = (m - rangeStart) * pxPerMin;
+    hoursHtml += '<div class="tl-hour-lbl" style="top:' + top + 'px">' + tlFmtHour(m/60) + '</div>';
+    gridHtml += '<div class="tl-gridline" style="top:' + top + 'px"></div>';
+  }
+
+  const nowD = new Date();
+  const nowMin = nowD.getHours()*60 + nowD.getMinutes();
+  const todayIdx = dayStrs.indexOf(todayStr);
+
+  const colsHtml = byDay.map((list, i) => {
+    const blocks = list.map(s => {
+      const top = (s.startMin - rangeStart) * pxPerMin;
+      const height = Math.max(15, (s.endMin - s.startMin) * pxPerMin);
+      const colW = 100 / s._colCount;
+      const left = 'calc(' + (s._col * colW) + '% + 2px)';
+      const width = 'calc(' + colW + '% - 4px)';
+      const name = s.taskName || 'Others';
+      const ci = tagColorIndex(name);
+      const startStr = new Date(s.ts).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      const title = name + ' · ' + startStr + ' · ' + s.mins + 'm' + (s.note ? ' — ' + s.note : '');
+      return '<div class="tl-block tc-' + ci + '" style="top:' + top + 'px;left:' + left + ';width:' + width + ';height:' + height + 'px" title="' + title.replace(/"/g,'&quot;') + '">'
+        + '<div class="tl-block-name">' + name + '</div>'
+        + '</div>';
+    }).join('');
+    const nowLine = (i === todayIdx && nowMin >= rangeStart && nowMin <= rangeEnd)
+      ? '<div class="tl-now-line" style="top:' + ((nowMin - rangeStart) * pxPerMin) + 'px"><span class="tl-now-dot"></span></div>'
+      : '';
+    return '<div class="tl-day-col">' + blocks + nowLine + '</div>';
+  }).join('');
+
+  bodyEl.innerHTML = '<div class="tl-hours" style="height:' + trackHeight + 'px">' + hoursHtml + '</div>'
+    + '<div class="tl-week-grid" style="height:' + trackHeight + 'px"><div class="tl-grid-lines">' + gridHtml + '</div>' + colsHtml + '</div>';
+
+  // Scroll so the earliest session is in view rather than the top of a padded range
+  bodyEl.scrollTop = 0;
+
+  // Legend doubles as the "distribution by project" breakdown for the week
+  const byName = {};
+  allSessions.forEach(s => {
+    const name = s.taskName || 'Others';
+    byName[name] = (byName[name] || 0) + (s.mins || 0);
+  });
+  const legendItems = Object.keys(byName).sort((a, b) => byName[b] - byName[a]);
+  if (legendEl) legendEl.innerHTML = legendItems.map(name => {
+    const mins = byName[name];
+    const ci = tagColorIndex(name);
+    const h = Math.floor(mins/60), m = mins%60;
+    return '<div class="tl-legend-chip"><span class="tl-legend-dot tc-' + ci + '"></span>' + name + '<span class="tl-legend-val">' + (h ? h+'h ' : '') + m + 'm</span></div>';
+  }).join('');
 }
 
 var wrFocusMode = localStorage.getItem('jhtt_wr_focus_mode') || 'project';
