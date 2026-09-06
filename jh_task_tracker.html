@@ -817,7 +817,7 @@ body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;font-w
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
         <div style="display:flex;align-items:baseline;gap:14px">
           <div class="daily-date-label" id="daily-date-label"></div>
-          <div id="daily-progress-pill" style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace"></div>
+          <div id="daily-progress-pill" style="display:flex;align-items:center;flex-wrap:wrap;gap:7px;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace"></div>
         </div>
       </div>
       <div class="daily-layout">
@@ -6306,6 +6306,16 @@ let _dailyAddDate = 'today';
 })();
 let backlogItems = JSON.parse(localStorage.getItem(BACKLOG_KEY) || '[]');
 
+// Daily focus goal (minutes). One rolling target, not per-day. Default 6h.
+const FOCUS_GOAL_KEY = 'jhtt_focus_goal';
+let _focusGoalMins = (function () { const v = parseInt(localStorage.getItem(FOCUS_GOAL_KEY)); return (isNaN(v) || v < 0) ? 360 : v; })();
+function dailyFocusGoal() { return _focusGoalMins; }
+function dailySetFocusGoal(mins) {
+  _focusGoalMins = Math.max(0, mins | 0);
+  localStorage.setItem(FOCUS_GOAL_KEY, String(_focusGoalMins));
+  dailyRender();
+}
+
 function dailyLocalDate(offset = 0) {
   const d = new Date();
   d.setDate(d.getDate() + offset);
@@ -6875,6 +6885,54 @@ function dailyClearEst(id) {
   dailyRender();
 }
 
+// ── Daily focus goal editor (small popup off the header pill) ──
+function dailyEditFocusGoal(e) {
+  if (e) e.stopPropagation();
+  const existing = document.getElementById('focus-goal-popup');
+  if (existing) { existing.remove(); return; }
+  document.querySelectorAll('.daily-est-popup, .daily-link-popup').forEach(el => el.remove());
+  const anchor = (e && e.currentTarget) || document.getElementById('daily-progress-pill');
+  const cur = dailyFocusGoal();
+  const popup = document.createElement('div');
+  popup.className = 'daily-est-popup';
+  popup.id = 'focus-goal-popup';
+  popup.innerHTML = `<div style="font-size:11px;color:var(--muted);margin-bottom:7px;font-weight:700;letter-spacing:.03em">DAILY FOCUS GOAL</div>`
+    + `<div style="display:flex;gap:6px;align-items:center">`
+    + `<input class="daily-link-input" id="focus-goal-h" type="number" min="0" max="24" placeholder="0" value="${Math.floor(cur / 60) || ''}" style="width:52px;text-align:center" />`
+    + `<span style="font-size:12px;color:var(--muted)">h</span>`
+    + `<input class="daily-link-input" id="focus-goal-m" type="number" min="0" max="59" placeholder="0" value="${cur % 60 || ''}" style="width:52px;text-align:center" />`
+    + `<span style="font-size:12px;color:var(--muted)">m</span>`
+    + `<button class="daily-link-save-btn" onclick="dailySetFocusGoalCustom()" style="margin-left:auto">Set</button></div>`;
+  document.body.appendChild(popup);
+  const r = anchor.getBoundingClientRect();
+  popup.style.position = 'fixed';
+  popup.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 232)) + 'px';
+  popup.style.top = (r.bottom + 6) + 'px';
+  setTimeout(() => {
+    function outside(ev) { if (!popup.contains(ev.target)) { popup.remove(); document.removeEventListener('mousedown', outside); } }
+    document.addEventListener('mousedown', outside);
+  }, 0);
+  ['focus-goal-h', 'focus-goal-m'].forEach(gid => {
+    const g = document.getElementById(gid);
+    if (g) g.addEventListener('keydown', ev => { if (ev.key === 'Enter') dailySetFocusGoalCustom(); if (ev.key === 'Escape') popup.remove(); });
+  });
+  const fh = document.getElementById('focus-goal-h');
+  if (fh) fh.focus();
+}
+
+function dailySetFocusGoalCustom() {
+  const hEl = document.getElementById('focus-goal-h');
+  const mEl = document.getElementById('focus-goal-m');
+  if (!hEl || !mEl) return;
+  const h = Math.max(0, parseInt(hEl.value) || 0);
+  const m = Math.max(0, parseInt(mEl.value) || 0);
+  const total = h * 60 + m;
+  if (total <= 0) return;
+  const popup = document.getElementById('focus-goal-popup');
+  if (popup) popup.remove();
+  dailySetFocusGoal(total);
+}
+
 // ── Backlog estimated time (mirrors dailyEditEst) ──────────────
 function backlogRenderRefresh() {
   if (document.getElementById('daily-panel-backlog')) dailyRender();
@@ -7292,7 +7350,16 @@ function dailyRender() {
   if (pill) {
     const pct = totalCount > 0 ? Math.round(doneCount / totalCount * 100) : 0;
     const barColor = pct === 100 ? 'var(--mint2)' : 'var(--sage)';
-    pill.innerHTML = `<span style="font-weight:700;color:var(--text2)">${doneCount}/${totalCount}</span><div style="width:48px;height:2px;background:var(--surface3);border-radius:999px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${barColor};border-radius:999px"></div></div><span>${focusHours}</span>`;
+    const goalMins = dailyFocusGoal();
+    const _goh = Math.floor(goalMins / 60), _gom = goalMins % 60;
+    const goalLabel = _goh + 'h ' + String(_gom).padStart(2, '0') + 'm';
+    const goalReached = goalMins > 0 && pomoMinsToday >= goalMins;
+    pill.innerHTML = `<span style="font-weight:700;color:var(--text2)">${doneCount}/${totalCount}</span>`
+      + `<div style="width:48px;height:2px;background:var(--surface3);border-radius:999px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${barColor};border-radius:999px"></div></div>`
+      + `<span title="Focus logged today"${goalReached ? ' style="color:var(--mint2);font-weight:700"' : ''}>${focusHours}</span>`
+      + `<span style="color:var(--muted2)">/</span>`
+      + `<button onclick="dailyEditFocusGoal(event)" title="Daily focus goal — click to change" style="background:none;border:none;padding:0;font:inherit;color:var(--muted);cursor:pointer;border-bottom:1px dashed var(--border2);line-height:1.4">${goalLabel}</button>`
+      + (goalReached ? `<span title="You've logged your full focus goal for today — time to step away." style="display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;background:rgba(122,184,154,.18);color:var(--sage3);font-weight:700;letter-spacing:.02em">🌿 Rest earned</span>` : '');
   }
 
   const backlogPanel = document.getElementById('daily-panel-backlog');
