@@ -2073,7 +2073,7 @@ function render() {
   updateBadges();
   const sorted = [...tasks].sort((a,b) => parseDate(b.date||0) - new Date(a.date||0));
   const dl = document.getElementById('dashboard-list');
-  if (dl) { dl.innerHTML = sorted.slice(0,9).map(taskRow).join('') || '<div class="empty"><div class="empty-icon" style="color:var(--accent)"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 9a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v9a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2l0 -9\"/><path d=\"M8 7v-2a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2v2\"/><path d=\"M3 13a20 20 0 0 0 18 0\"/></svg></div><div class="empty-text">No projects yet</div></div>'; bindDashboardDrag(); }
+  if (dl) { dl.innerHTML = sorted.slice(0,8).map(taskRow).join('') || '<div class="empty"><div class="empty-icon" style="color:var(--accent)"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 9a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v9a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2l0 -9\"/><path d=\"M8 7v-2a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2v2\"/><path d=\"M3 13a20 20 0 0 0 18 0\"/></svg></div><div class="empty-text">No projects yet</div></div>'; bindDashboardDrag(); }
   document.getElementById('rc-count').textContent = sorted.length;
   renderKanban();
   renderProjList();
