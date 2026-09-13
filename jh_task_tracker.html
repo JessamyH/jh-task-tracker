@@ -8151,7 +8151,10 @@ function cycleTheme() {
 
     <div class="form-group">
       <label class="form-label">Gist ID <span style="font-weight:400;text-transform:none;letter-spacing:0">(leave blank to create a new private gist)</span></label>
-      <input id="sync-gist-input" type="text" class="form-input" placeholder="auto-created on first push" autocomplete="off">
+      <div style="position:relative">
+        <input id="sync-gist-input" type="password" class="form-input" placeholder="auto-created on first push" autocomplete="off" style="padding-right:34px">
+        <button type="button" onclick="syncToggleGistVisibility()" title="Show/hide" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:14px;color:var(--muted);padding:2px 4px;line-height:1">👁</button>
+      </div>
       <div style="font-size:11px;color:var(--muted);margin-top:5px;line-height:1.5">On your <b>second</b> device, paste the Gist ID shown here after the first device’s first push.</div>
     </div>
 
@@ -8468,7 +8471,7 @@ function cycleTheme() {
     const m = getMeta();
     const gid = getGist();
     let s = 'Connected on <b>'+deviceLabel()+'</b>.<br>';
-    s += gid ? ('Gist: <span style="color:var(--sage2)">'+gid+'</span><br>') : 'No gist yet \u2014 push to create one.<br>';
+    s += gid ? ('Gist: <span style="color:var(--sage2)">'+'\u2022'.repeat(Math.max(gid.length-4,0))+gid.slice(-4)+'</span><br>') : 'No gist yet \u2014 push to create one.<br>';
     s += 'Last sync: '+fmtTime(m.lastSync);
     if (m.dirty) s += ' <span style="color:#c98a3a">\u2022 unsynced changes</span>';
     el.innerHTML = s;
@@ -8482,6 +8485,10 @@ function cycleTheme() {
     document.getElementById('sync-modal').classList.add('open');
   };
   window.syncCloseModal = function(){ document.getElementById('sync-modal').classList.remove('open'); };
+  window.syncToggleGistVisibility = function(){
+    const el = document.getElementById('sync-gist-input');
+    el.type = el.type === 'password' ? 'text' : 'password';
+  };
   window.syncSaveConfig = function(){
     const tok = document.getElementById('sync-token-input').value.trim();
     const gid = document.getElementById('sync-gist-input').value.trim();
