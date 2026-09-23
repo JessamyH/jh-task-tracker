@@ -21,10 +21,6 @@ Plan your day, manage projects, track focus sessions, generate weekly reports, a
   <img width="48%" alt="Timeline" src="https://github.com/user-attachments/assets/d24e817f-b30c-4f0e-8d83-69f54a7dc844" />
   <img width="48%" alt="Report" src="https://github.com/user-attachments/assets/aeba06ae-abe7-48e9-acde-ca0a74536217" />
 </p>
-<p align="center">
-  <img width="48%" alt="AI Assist" src="https://github.com/user-attachments/assets/e5b7828b-6b29-405d-8e78-ba531b3ed26d" />
-  <img width="48%" alt="Meeting" src="https://github.com/user-attachments/assets/462d3ebc-bb53-458f-b745-4a3261073368" />
-</p>
 
 ## ✨ Philosophy
 
@@ -44,6 +40,8 @@ Everything runs locally in your browser, so your data stays on your own machine.
 
 Plan your day, organize tasks by project, prioritize important work, and easily carry unfinished tasks forward. Schedule items for Today or Tomorrow, log time manually against a task, and add time estimates that sync with the Pomodoro timer.
 
+Set an editable daily focus goal and earn a "Rest earned" badge once you've logged enough focus time for the day.
+
 #### Backlog & Blockers
 
 Keep a running backlog alongside your daily work. Track blockers with status and notes, then move them into your daily list when you're ready.
@@ -60,7 +58,11 @@ Capture ideas and product feedback/bugs as draggable, starrable cards, kept sepa
 
 Stay focused with a built-in Pomodoro timer and automatic session logging. Let a session continue past its estimate instead of stopping, edit a logged session's duration after the fact, and get a sound when a break ends.
 
-Export focus history to Excel by project and date range, including a By Tag summary sheet.
+Export focus history to Excel by project and date range, including a By Tag summary sheet and an AI-summarized Timesheet sheet.
+
+#### Global Search
+
+Press `Ctrl+K` to search across tasks, ideas, and log notes from anywhere in the app.
 
 
 ### 📋 Project Management
@@ -83,16 +85,16 @@ Generate a visual summary of your week's work, including:
 * Weekly heatmap
 * Per-project breakdown
 
+#### Timeline
+
+A read-only view of how your focus time was distributed across the week, broken down by project.
+
 
 ### 🎨 Themes
 
 Switch between a green and an orange theme from the sidebar.
 
 ### 🤖 AI Features *(Optional)*
-
-#### Meeting Assistant
-
-Capture meeting notes with a rich-text sidebar and optionally generate AI-powered transcriptions and summaries.
 
 #### Weekly Standup Generator
 
@@ -112,15 +114,9 @@ Copy the generated summary and send it directly to your team.
 
 Pick a date range and get an AI analysis of how the period actually went — weekday focus time and active workdays, time split by task, day-by-day fragmentation, planned vs. delivered tasks, weekend-work boundary check, and stalled work — followed by a short list of specific, actionable recommendations for the week ahead.
 
-#### AI Assistant
+#### Meeting Assistant
 
-Bring your own Claude API key to enable:
-
-* English translation
-* Meeting summaries
-* Weekly standups
-* Weekly efficiency reviews and recommendations
-* Freeform chat
+Capture meeting notes with a rich-text sidebar and optionally generate AI-powered transcriptions and summaries.
 
 ### ☁️ Cloud Sync *(Optional)*
 
