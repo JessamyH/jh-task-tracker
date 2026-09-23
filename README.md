@@ -10,16 +10,20 @@ Plan your day, manage projects, track focus sessions, generate weekly reports, a
 ## 📸 Screenshots
 
 <p align="center">
-  <img width="48%" alt="Dashboard" src="https://github.com/user-attachments/assets/5b6a5b38-38d2-4047-b379-7e60660a581c" />
-  <img width="48%" alt="Projects" src="https://github.com/user-attachments/assets/062a4c90-009c-4636-a0d0-dd359b3fd037" />
+  <img width="48%" alt="Dashboard" src="https://github.com/user-attachments/assets/bb79a26c-0993-41e5-b053-48baebe3cafe" />
+  <img width="48%" alt="Daily List" src="https://github.com/user-attachments/assets/70b5fdf6-d7cd-4f40-95b2-39eb6834fb3c" />
 </p>
 <p align="center">
-  <img width="48%" alt="Daily List" src="https://github.com/user-attachments/assets/014e98f3-fe94-48f3-925e-c4d112673bfa" />
-  <img width="48%" alt="Pomodoro" src="https://github.com/user-attachments/assets/f32919a3-f775-4a7c-b873-21d92b48a552" />
+  <img width="48%" alt="Projects" src="https://github.com/user-attachments/assets/fcd2fd19-8e39-49b9-aa82-3c59554d0f4d" />
+  <img width="48%" alt="Pomodoro" src="https://github.com/user-attachments/assets/b4965646-036f-4b90-a995-208fbc357cc3" />
 </p>
 <p align="center">
-  <img width="48%" alt="Weekly Report" src="https://github.com/user-attachments/assets/88c06544-2b2b-4764-a6a9-3b3c9639ab68" />
-  <img width="48%" alt="AI Assistant" src="https://github.com/user-attachments/assets/6365a4df-c6d5-4af3-9088-9a995f42c6b5" />
+  <img width="48%" alt="Timeline" src="https://github.com/user-attachments/assets/d24e817f-b30c-4f0e-8d83-69f54a7dc844" />
+  <img width="48%" alt="Report" src="https://github.com/user-attachments/assets/aeba06ae-abe7-48e9-acde-ca0a74536217" />
+</p>
+<p align="center">
+  <img width="48%" alt="AI Assist" src="https://github.com/user-attachments/assets/e5b7828b-6b29-405d-8e78-ba531b3ed26d" />
+  <img width="48%" alt="Meeting" src="https://github.com/user-attachments/assets/462d3ebc-bb53-458f-b745-4a3261073368" />
 </p>
 
 ## ✨ Philosophy
