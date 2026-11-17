@@ -12,7 +12,7 @@ Plan your day, manage projects, track focus sessions, generate weekly reports, a
 This repo is the original single-file version. The project has since grown in two directions:
 
 * **[JH TaskOps](https://github.com/JessamyH/jh-taskops)**: the Cloud & DevOps side, bringing the app to AWS with infrastructure as code, CI/CD and secure cloud delivery.
-* **JH Task Tracker for Anna**: a refactored version built as an app for Anna AI OS, with AI features running through Anna instead of your own API key. See [PRIVACY.md](PRIVACY.md) for its privacy policy.
+* **JH Task Tracker for Anna**: a refactored version built as an app for Anna AI OS, with AI features running through Anna instead of your own API key. See [PRIVACY.md](https://github.com/JessamyH/jh-task-tracker-anna-docs/blob/main/PRIVACY.md) for its privacy policy.
 
 ## 📸 Screenshots
 
